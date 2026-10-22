@@ -15,8 +15,16 @@ const useAuthStore = create((set, get) => ({
         SecureStore.getItemAsync('user'),
         SecureStore.getItemAsync('role'),
       ]);
+      if (!token) {
+        await Promise.all([
+          SecureStore.deleteItemAsync('user'),
+          SecureStore.deleteItemAsync('role'),
+        ]);
+        set({ token: null, user: null, role: null, initialized: true });
+        return;
+      }
       set({
-        token: token || null,
+        token,
         user: userJson ? JSON.parse(userJson) : null,
         role: role || null,
         initialized: true,
@@ -36,14 +44,13 @@ const useAuthStore = create((set, get) => ({
     set({ user, token, role: 'admin' });
   },
 
-  // Manager static-key login (no password needed)
-  loginManager: async () => {
-    const managerUser = { name: 'Manager', role: 'manager' };
+  loginManager: async (user, token) => {
     await Promise.all([
-      SecureStore.setItemAsync('user', JSON.stringify(managerUser)),
+      SecureStore.setItemAsync('token', token),
+      SecureStore.setItemAsync('user', JSON.stringify(user)),
       SecureStore.setItemAsync('role', 'manager'),
     ]);
-    set({ user: managerUser, token: null, role: 'manager' });
+    set({ user, token, role: 'manager' });
   },
 
   logout: async () => {

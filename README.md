@@ -192,4 +192,4 @@ The project is not online yet. This setup uses Railway for the API and MySQL dat
 - If the backend domain changes, update `API_URL` in both frontend services and redeploy them.
 - Before database migrations or significant updates, take a database backup. Schedule automatic backups and make sure you know how to restore one.
 - Never run `npm run seed` as a routine update; it is for initializing a new database only.
-- The Manager App uses individual account sign-in; do not add a shared API key to frontend code or environment variables prefixed with `VITE_`.
+- The Manager App and mobile app use individual account sign-in; do not add a shared API key to frontend code or environment variables bundled into client apps.

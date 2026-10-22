@@ -17,10 +17,9 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [managerLoading, setManagerLoading] = useState(false);
   const [error, setError] = useState('');
 
-  async function handleAdminLogin() {
+  async function handleLogin() {
     if (!email.trim() || !password.trim()) {
       setError('Please enter email and password.');
       return;
@@ -29,27 +28,17 @@ export default function LoginScreen() {
     setError('');
     try {
       const res = await authApi.login(email.trim(), password);
-      if (res.data.user.role !== 'admin') {
-        setError('Admin access only. Use Manager Login below.');
-        return;
+      if (res.data.user.role === 'admin') {
+        await loginAdmin(res.data.user, res.data.token);
+      } else if (res.data.user.role === 'manager') {
+        await loginManager(res.data.user, res.data.token);
+      } else {
+        setError('This account does not have app access.');
       }
-      await loginAdmin(res.data.user, res.data.token);
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed. Check your credentials.');
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function handleManagerLogin() {
-    setManagerLoading(true);
-    setError('');
-    try {
-      await loginManager();
-    } catch (err) {
-      setError('Manager login failed.');
-    } finally {
-      setManagerLoading(false);
     }
   }
 
@@ -69,10 +58,10 @@ export default function LoginScreen() {
           <Text style={styles.tagline}>Restaurant Management System</Text>
         </View>
 
-        {/* Admin login card */}
+        {/* Account login */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Admin Login</Text>
-          <Text style={styles.cardSub}>Dashboard & full management access</Text>
+          <Text style={styles.cardTitle}>Sign In</Text>
+          <Text style={styles.cardSub}>Use your admin or manager account</Text>
 
           <Input
             label="Email"
@@ -96,34 +85,12 @@ export default function LoginScreen() {
           ) : null}
 
           <Button
-            label="Sign In as Admin"
-            onPress={handleAdminLogin}
+            label="Sign In"
+            onPress={handleLogin}
             loading={loading}
             size="lg"
             style={styles.btn}
             icon="🔐"
-          />
-        </View>
-
-        {/* Divider */}
-        <View style={styles.divider}>
-          <View style={styles.divLine} />
-          <Text style={styles.divText}>or</Text>
-          <View style={styles.divLine} />
-        </View>
-
-        {/* Manager quick-login */}
-        <View style={[styles.card, styles.managerCard]}>
-          <Text style={styles.cardTitle}>Manager / Staff</Text>
-          <Text style={styles.cardSub}>POS, orders, purchases & daily summary</Text>
-          <Button
-            label="Enter as Manager"
-            onPress={handleManagerLogin}
-            loading={managerLoading}
-            variant="ghost"
-            size="lg"
-            style={styles.btn}
-            icon="👨‍🍳"
           />
         </View>
 
@@ -163,11 +130,6 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     ...shadow.lg,
   },
-  managerCard: {
-    backgroundColor: colors.darkSurface,
-    borderWidth: 1,
-    borderColor: colors.primary + '40',
-  },
   cardTitle: {
     fontSize: 18,
     fontWeight: '700',
@@ -187,11 +149,4 @@ const styles = StyleSheet.create({
   },
   errorText: { fontSize: 13, color: colors.danger },
   btn: { marginTop: spacing.sm },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: spacing.xl,
-  },
-  divLine: { flex: 1, height: 1, backgroundColor: colors.dark + '40' },
-  divText: { fontSize: 13, color: colors.muted, marginHorizontal: spacing.md },
 });

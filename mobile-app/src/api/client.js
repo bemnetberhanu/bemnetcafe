@@ -4,7 +4,6 @@ import { Platform } from 'react-native';
 
 const DEFAULT_HOST = Platform.OS === 'android' ? 'http://10.0.2.2:5001/api' : 'http://localhost:5001/api';
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL || DEFAULT_HOST;
-const MANAGER_KEY = process.env.EXPO_PUBLIC_MANAGER_KEY || 'habesha-manager-key-2024';
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -12,12 +11,13 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Attach auth header to every request based on stored role
+// Attach the signed-in user's JWT to every request
 api.interceptors.request.use(async (config) => {
   try {
     const role = await SecureStore.getItemAsync('role');
     if (role === 'manager') {
-      config.headers['X-Manager-Key'] = MANAGER_KEY;
+      const token = await SecureStore.getItemAsync('token');
+      if (token) config.headers['Authorization'] = `Bearer ${token}`;
     } else {
       const token = await SecureStore.getItemAsync('token');
       if (token) config.headers['Authorization'] = `Bearer ${token}`;
