@@ -164,7 +164,19 @@ Variation overrides supported:
 
 ## Production Deployment on Railway
 
-The project is not online yet. This setup uses Railway for the API and MySQL database, and Railway services with Caddy for both websites. You need a private GitHub repository connected to Railway. The root `.gitignore` excludes dependency folders, build output, and `.env` files. Never upload real `.env` files.
+The project is not online yet. This setup uses Railway for the API and MySQL database, and Railway services with Caddy for both websites. You need a GitHub repository connected to Railway. The root `.gitignore` excludes dependency folders, build output, and `.env` files. Never upload real `.env` files.
+
+### Use Netlify for the websites instead
+
+Netlify can host the Admin Dashboard and Manager App as static sites, but it cannot host this Express API as a persistent Node.js server or provide the MySQL database. The API and MySQL database must still be hosted elsewhere before the apps can sign in or load data.
+
+1. In Netlify, choose **Add new project → Import an existing project** and connect the GitHub repository.
+2. Select the `admin-dashboard` directory as the site to deploy. Its `netlify.toml` sets the build command, publish directory, and SPA refresh fallback.
+3. Create a second Netlify site from the same repository, this time selecting `manager-app`.
+4. For each Netlify site, set `VITE_API_URL` to the hosted API URL ending in `/api` (for example, `https://your-api.example.com/api`), then redeploy.
+5. Add both Netlify site origins to the API's `CORS_ORIGINS` setting.
+
+Netlify rebuilds a site when changes are pushed to its connected Git branch. See Netlify's [monorepo deployment guide](https://docs.netlify.com/build/configure-builds/monorepos/) for the site-directory setup.
 
 ### One-time setup
 
