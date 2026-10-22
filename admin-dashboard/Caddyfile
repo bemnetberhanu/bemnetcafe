@@ -1,0 +1,13 @@
+:{$PORT:8080} {
+  @api path /api/*
+  handle @api {
+    reverse_proxy {$API_URL}
+  }
+
+  handle {
+    root * /srv
+    encode gzip
+    try_files {path} /index.html
+    file_server
+  }
+}

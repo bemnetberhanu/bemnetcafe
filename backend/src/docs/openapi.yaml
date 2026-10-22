@@ -1,0 +1,302 @@
+openapi: 3.0.3
+info:
+  title: Habesha Restaurant API
+  version: 1.0.0
+  description: |
+    Full-stack restaurant management API for an Ethiopian restaurant.
+    Handles inventory management, order processing, purchases, financial analytics,
+    and the daily low-stock notification system.
+
+servers:
+  - url: http://localhost:5000/api
+    description: Local development
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, example: admin@habesha.com }
+        password: { type: string, example: admin123 }
+
+    Ingredient:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string, example: Beef }
+        unit_of_measure: { type: string, example: kg }
+        current_quantity: { type: number, example: 20.0 }
+        reorder_level: { type: number, example: 5.0 }
+        reorder_quantity: { type: number, example: 15.0 }
+        cost_per_unit: { type: number, example: 8.50 }
+        is_low_stock: { type: boolean }
+
+    OrderItem:
+      type: object
+      required: [recipe_item_id, quantity]
+      properties:
+        recipe_item_id: { type: integer }
+        variation_id: { type: integer, nullable: true }
+        quantity: { type: integer, minimum: 1 }
+
+    CreateOrderRequest:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        payment_method:
+          type: string
+          enum: [cash, card, other]
+          default: cash
+        notes: { type: string }
+
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        200:
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: { type: string }
+                  user:
+                    type: object
+                    properties:
+                      id: { type: integer }
+                      name: { type: string }
+                      email: { type: string }
+                      role: { type: string }
+        401:
+          description: Invalid credentials
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Get current user
+      responses:
+        200:
+          description: Current user info
+
+  /ingredients:
+    get:
+      tags: [Ingredients]
+      summary: List all ingredients (includes is_low_stock flag)
+      responses:
+        200:
+          description: Array of ingredients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ingredient'
+    post:
+      tags: [Ingredients]
+      summary: Create ingredient (Admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Ingredient'
+      responses:
+        201:
+          description: Created ingredient
+
+  /ingredients/{id}:
+    put:
+      tags: [Ingredients]
+      summary: Update ingredient (Admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: Updated ingredient
+    delete:
+      tags: [Ingredients]
+      summary: Delete ingredient (Admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: Deleted
+
+  /menu:
+    get:
+      tags: [Menu]
+      summary: List all menu items with ingredients and variations
+      responses:
+        200:
+          description: Array of menu items
+    post:
+      tags: [Menu]
+      summary: Create menu item with recipe (Admin only)
+      responses:
+        201:
+          description: Created
+
+  /orders:
+    post:
+      tags: [Orders]
+      summary: Place an order (Manager/Admin)
+      description: |
+        **Critical logic:**
+        1. Checks stock for all required ingredients
+        2. Returns 400 with shortages if insufficient
+        3. Deducts inventory and saves order if all OK
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        201:
+          description: Order placed, inventory deducted
+        400:
+          description: Insufficient stock
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+                  shortages:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        ingredient_name: { type: string }
+                        required: { type: number }
+                        available: { type: number }
+
+  /purchases:
+    post:
+      tags: [Purchases]
+      summary: Record a purchase and restock inventory (Manager/Admin)
+      description: |
+        Submitting a purchase automatically increases current_quantity
+        for each ingredient. This stops the daily nag notification
+        once the ingredient rises above its reorder_level.
+      responses:
+        201:
+          description: Purchase recorded, inventory updated
+
+  /analytics/financial:
+    get:
+      tags: [Analytics]
+      summary: Financial report (Revenue, COGS, Operating Costs, Profit)
+      parameters:
+        - in: query
+          name: start_date
+          required: true
+          schema: { type: string, format: date-time }
+        - in: query
+          name: end_date
+          required: true
+          schema: { type: string, format: date-time }
+        - in: query
+          name: group_by
+          schema:
+            type: string
+            enum: [day, week, month]
+            default: day
+      responses:
+        200:
+          description: Financial report with chart data
+
+  /analytics/ranking:
+    get:
+      tags: [Analytics]
+      summary: Top and worst selling items
+      parameters:
+        - in: query
+          name: days
+          schema: { type: integer, default: 30 }
+      responses:
+        200:
+          description: Sales ranking
+
+  /analytics/patterns:
+    get:
+      tags: [Analytics]
+      summary: Day-of-week sales patterns
+      responses:
+        200:
+          description: Patterns by day
+
+  /analytics/daily-summary:
+    get:
+      tags: [Analytics]
+      summary: Today's quick summary (orders, revenue, top items)
+      responses:
+        200:
+          description: Daily summary
+
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: Get all notifications
+      responses:
+        200:
+          description: Notifications list with unread count
+
+  /notifications/unread:
+    get:
+      tags: [Notifications]
+      summary: Get only unread notifications
+      responses:
+        200:
+          description: Unread notifications
+
+  /notifications/{id}/read:
+    patch:
+      tags: [Notifications]
+      summary: Mark a notification as read (use "all" as id to mark all)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        200:
+          description: Marked as read
+
+  /notifications/trigger-stock-check:
+    post:
+      tags: [Notifications]
+      summary: Manually trigger the daily stock check (Admin only)
+      responses:
+        200:
+          description: Stock check result
