@@ -6,6 +6,7 @@ const rateLimit = require('express-rate-limit');
 const { startScheduler } = require('./scheduler/cronJobs');
 
 const app = express();
+app.set('trust proxy', 1);
 
 // ─── Security Headers (helmet) ───────────────────────────────────────────────
 // Sets Content-Security-Policy, X-Frame-Options, X-Content-Type-Options,
