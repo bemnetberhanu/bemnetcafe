@@ -55,6 +55,15 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
 
 .pos-screen, .pos-main, .pos-menu { min-height: 0; min-width: 0; }
 
+.expense-date-amount {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.expense-date-amount > div { min-width: 0; }
+.expense-date-amount input { width: 100%; min-width: 0; }
+
 @media (max-width: 640px) {
   .manager-topbar { gap: 8px !important; padding-inline: 12px !important; }
   .manager-page-title { font-size: 12px !important; flex-shrink: 0; }
@@ -84,6 +93,7 @@ input, select, textarea { font-family: inherit; font-size: inherit; }
   .pos-cart-items { min-height: 0; }
   .summary-heading { flex-wrap: wrap; gap: 8px; }
   .summary-cards { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .expense-date-amount { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (max-width: 360px) {

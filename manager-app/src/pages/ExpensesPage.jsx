@@ -38,7 +38,7 @@ export default function ExpensesPage() {
 
       <form onSubmit={handleSubmit}>
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <div className="expense-date-amount">
             <div>
               <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4, color: 'var(--muted)' }}>DATE</label>
               <input type="date" required style={iStyle} value={form.expense_date} onChange={e => setForm({ ...form, expense_date: e.target.value })} />
