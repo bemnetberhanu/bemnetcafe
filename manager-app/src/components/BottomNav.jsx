@@ -26,7 +26,7 @@ export default function BottomNav() {
   }, []);
 
   return (
-    <nav style={{
+    <nav className="manager-bottom-nav" style={{
       height: 'var(--nav-height)',
       background: '#1c1410',
       display: 'flex',
@@ -37,6 +37,7 @@ export default function BottomNav() {
       {navItems.map(item => (
         <NavLink
           key={item.to}
+          className="manager-nav-link"
           to={item.to}
           end={item.exact}
           style={({ isActive }) => ({

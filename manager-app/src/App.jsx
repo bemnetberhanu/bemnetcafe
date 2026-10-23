@@ -38,7 +38,7 @@ export default function App() {
         </Routes>
       )}
       {token && (
-        <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+        <div className="manager-app-shell" style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
           <TopBar />
           <div style={{ flex: 1, overflow: 'hidden' }}>
             <Routes>

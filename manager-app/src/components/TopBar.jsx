@@ -20,7 +20,7 @@ export default function TopBar() {
   }
 
   return (
-    <header style={{
+    <header className="manager-topbar" style={{
       height: 56,
       background: '#1c1410',
       color: '#fff',
@@ -31,17 +31,18 @@ export default function TopBar() {
       flexShrink: 0,
       boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
     }}>
-      <span style={{ fontSize: 22 }}>🇪🇹</span>
-      <div style={{ flex: 1 }}>
+      <span className="manager-brand-icon" style={{ fontSize: 22 }}>🇪🇹</span>
+      <div className="manager-brand" style={{ flex: 1 }}>
         <div style={{ fontWeight: 700, fontSize: 15 }}>Habesha Restaurant</div>
         <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
           {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
         </div>
       </div>
-      <div style={{ fontSize: 14, fontWeight: 600, color: '#f5c97a' }}>
+      <div className="manager-page-title" style={{ fontSize: 14, fontWeight: 600, color: '#f5c97a' }}>
         {PAGE_TITLES[pathname] || 'Manager App'}
       </div>
       <button
+        className="manager-signout"
         type="button"
         onClick={logout}
         style={{

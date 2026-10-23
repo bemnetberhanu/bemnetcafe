@@ -75,9 +75,9 @@ export default function POSPage() {
   if (loading) return <div className="page-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>Loading menu...</div>;
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div className="pos-screen" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Category tabs */}
-      <div style={{ display: 'flex', gap: 8, padding: '10px 16px', overflowX: 'auto', background: 'var(--surface)', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+      <div className="pos-categories" style={{ display: 'flex', gap: 8, padding: '10px 16px', overflowX: 'auto', background: 'var(--surface)', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
         {categories.map(cat => (
           <button
             key={cat}
@@ -94,9 +94,9 @@ export default function POSPage() {
         ))}
       </div>
 
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+      <div className="pos-main" style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         {/* Menu grid */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: 12 }}>
+        <div className="pos-menu" style={{ flex: 1, overflowY: 'auto', padding: 12 }}>
           {shortage && (
             <div style={{ marginBottom: 12, padding: 12, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10 }}>
               <div style={{ fontWeight: 700, color: 'var(--danger)', marginBottom: 6, fontSize: 13 }}>⚠️ Insufficient Stock:</div>
@@ -107,7 +107,7 @@ export default function POSPage() {
               ))}
             </div>
           )}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+          <div className="pos-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
             {filteredItems.map(item => (
               <MenuCard key={item.id} item={item} onAdd={addToCart} />
             ))}
@@ -115,12 +115,12 @@ export default function POSPage() {
         </div>
 
         {/* Cart sidebar */}
-        <div style={{ width: 240, background: 'var(--surface)', borderLeft: '1px solid var(--border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--border)', fontWeight: 700, fontSize: 14 }}>
+        <div className="pos-cart" style={{ width: 240, background: 'var(--surface)', borderLeft: '1px solid var(--border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div className="pos-cart-heading" style={{ padding: '12px 14px', borderBottom: '1px solid var(--border)', fontWeight: 700, fontSize: 14 }}>
             🛒 Order ({cart.length} item{cart.length !== 1 ? 's' : ''})
           </div>
 
-          <div style={{ flex: 1, overflowY: 'auto', padding: '8px 10px' }}>
+          <div className="pos-cart-items" style={{ flex: 1, overflowY: 'auto', padding: '8px 10px' }}>
             {cart.length === 0 ? (
               <div style={{ padding: '24px 12px', textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
                 Tap menu items to add them here
@@ -148,7 +148,7 @@ export default function POSPage() {
             )}
           </div>
 
-          <div style={{ padding: '12px 14px', borderTop: '1px solid var(--border)' }}>
+          <div className="pos-cart-footer" style={{ padding: '12px 14px', borderTop: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10, fontSize: 16, fontWeight: 700 }}>
               <span>Total</span>
               <span style={{ color: 'var(--primary)' }}>${cartTotal.toFixed(2)}</span>

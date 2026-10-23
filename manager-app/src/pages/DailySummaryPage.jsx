@@ -16,7 +16,7 @@ export default function DailySummaryPage() {
 
   return (
     <div className="page-content">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+      <div className="summary-heading" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h2 style={{ fontSize: 17, fontWeight: 700 }}>Daily Summary</h2>
         <input
           type="date"
@@ -30,7 +30,7 @@ export default function DailySummaryPage() {
         <div style={{ textAlign: 'center', paddingTop: 40, color: 'var(--muted)' }}>Loading...</div>
       ) : summary && (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+          <div className="summary-cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12, marginBottom: 16 }}>
             <SumCard icon="🧾" label="Total Orders" value={summary.order_count} color="#2563eb" />
             <SumCard icon="💰" label="Total Revenue" value={`$${summary.total_revenue.toFixed(2)}`} color="var(--success)" />
             <SumCard icon="💵" label="Cash Sales" value={`$${summary.cash_revenue.toFixed(2)}`} color="var(--primary)" />
