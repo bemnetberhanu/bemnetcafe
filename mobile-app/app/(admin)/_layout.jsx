@@ -24,13 +24,13 @@ export default function AdminLayout() {
       }}
     >
       <Tabs.Screen name="dashboard" options={{ title: 'Dashboard', tabBarIcon: ({ focused }) => <TabIcon emoji="📊" focused={focused} /> }} />
-      <Tabs.Screen name="financial" options={{ title: 'Financials', tabBarIcon: ({ focused }) => <TabIcon emoji="💰" focused={focused} /> }} />
-      <Tabs.Screen name="ranking" options={{ title: 'Ranking', tabBarIcon: ({ focused }) => <TabIcon emoji="🏆" focused={focused} /> }} />
+      <Tabs.Screen name="financial" options={{ href: null, title: 'Financials' }} />
+      <Tabs.Screen name="ranking" options={{ href: null, title: 'Ranking' }} />
       <Tabs.Screen name="orders" options={{ title: 'Orders', tabBarIcon: ({ focused }) => <TabIcon emoji="📋" focused={focused} /> }} />
       <Tabs.Screen name="menu" options={{ title: 'Menu', tabBarIcon: ({ focused }) => <TabIcon emoji="🍽️" focused={focused} /> }} />
-      <Tabs.Screen name="ingredients" options={{ title: 'Ingredients', tabBarIcon: ({ focused }) => <TabIcon emoji="🥩" focused={focused} /> }} />
-      <Tabs.Screen name="expenses" options={{ title: 'Expenses', tabBarIcon: ({ focused }) => <TabIcon emoji="🧾" focused={focused} /> }} />
-      <Tabs.Screen name="users" options={{ title: 'Users', tabBarIcon: ({ focused }) => <TabIcon emoji="👥" focused={focused} /> }} />
+      <Tabs.Screen name="ingredients" options={{ title: 'Stock', tabBarIcon: ({ focused }) => <TabIcon emoji="🥩" focused={focused} /> }} />
+      <Tabs.Screen name="expenses" options={{ href: null, title: 'Expenses' }} />
+      <Tabs.Screen name="users" options={{ href: null, title: 'Users' }} />
       <Tabs.Screen name="more" options={{ title: 'More', tabBarIcon: ({ focused }) => <TabIcon emoji="⚙️" focused={focused} /> }} />
     </Tabs>
   );

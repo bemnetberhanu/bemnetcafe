@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Alert, Switch, Linking,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { authApi } from '../../src/api/client';
 import useAuthStore from '../../src/store/authStore';
 import { colors, spacing, radius, shadow, typography } from '../../src/theme';
@@ -36,6 +36,7 @@ function SettingRow({ icon, label, sub, onPress, rightElement, danger }) {
 
 export default function MoreScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { user, logout } = useAuthStore();
   const [changingPw, setChangingPw] = useState(false);
   const [currentPw, setCurrentPw] = useState('');
@@ -112,6 +113,37 @@ export default function MoreScreen() {
               <Text style={styles.adminBadgeText}>🔐 ADMINISTRATOR</Text>
             </View>
           </View>
+        </View>
+
+        <SectionHeader title="MANAGEMENT" />
+        <View style={styles.card}>
+          <SettingRow
+            icon="💰"
+            label="Financial Report"
+            sub="Revenue, expenses and profit"
+            onPress={() => router.push('/(admin)/financial')}
+          />
+          <View style={styles.divider} />
+          <SettingRow
+            icon="🏆"
+            label="Sales Ranking"
+            sub="Top sellers and sales patterns"
+            onPress={() => router.push('/(admin)/ranking')}
+          />
+          <View style={styles.divider} />
+          <SettingRow
+            icon="🧾"
+            label="Expenses"
+            sub="View and manage operating costs"
+            onPress={() => router.push('/(admin)/expenses')}
+          />
+          <View style={styles.divider} />
+          <SettingRow
+            icon="👥"
+            label="User Management"
+            sub="Manage admin and manager accounts"
+            onPress={() => router.push('/(admin)/users')}
+          />
         </View>
 
         {/* Account section */}

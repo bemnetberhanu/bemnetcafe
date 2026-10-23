@@ -212,12 +212,29 @@ Render Shell access requires a paid service plan, so run the one-time database c
 
 The `.env` file is ignored by Git. Keep it on your computer and never upload it.
 
+To reset one of the initial account passwords, run `npm run reset-password` in `backend` with `RESET_USER_EMAIL` and `RESET_USER_PASSWORD` set in the current terminal. The command only allows the two seeded account emails, requires a password of at least 12 characters, and updates that account without printing the password. Do not rerun the seed script to reset passwords.
+
 ### 5. Connect the frontend apps
 
 In both Cloudflare Pages projects, set `VITE_API_URL` to `https://YOUR-API.onrender.com/api`, then trigger a new deployment. Test sign-in and basic data operations in both apps. The manager app requires a personal manager account; it no longer uses a shared public key.
 
+### 6. Run the native mobile app
+
+The Expo app supports both admin and manager accounts. From `mobile-app`, install dependencies and start the development server:
+
+```powershell
+cd mobile-app
+npm ci
+Copy-Item .env.example .env
+npx expo start
+```
+
+Install Expo Go on an Android or iOS phone connected to the same Wi-Fi network, then scan the QR code shown by Expo. The app uses the hosted API by default; `EXPO_PUBLIC_API_URL` in the local, Git-ignored `.env` can override it. Keep `.env` private.
+
+To verify the Android JavaScript bundle without a device or emulator, run `npx expo export --platform android`. An installable Android build additionally requires Android Studio/SDK and a compatible Java version.
+
 ### Updates
 
 - Push code changes to GitHub `main`; Render and Cloudflare Pages build and deploy updates automatically.
-- If the API URL or frontend domains change, update `VITE_API_URL` on both Pages projects and `CORS_ORIGINS` on Render.
+- If the API URL or frontend domains change, update `VITE_API_URL` on both Pages projects, `EXPO_PUBLIC_API_URL` in the mobile app's local `.env`, and `CORS_ORIGINS` on Render.
 - Back up the database regularly. Do not run `npm run seed` as an update.

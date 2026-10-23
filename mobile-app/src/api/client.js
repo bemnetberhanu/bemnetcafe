@@ -1,8 +1,7 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
-import { Platform } from 'react-native';
 
-const DEFAULT_HOST = Platform.OS === 'android' ? 'http://10.0.2.2:5001/api' : 'http://localhost:5001/api';
+const DEFAULT_HOST = 'https://habesha-restaurant-api.onrender.com/api';
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL || DEFAULT_HOST;
 
 const api = axios.create({
