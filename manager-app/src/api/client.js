@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { clearAuth } from '../auth';
 
 const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -17,8 +18,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401 && window.location.pathname !== '/login') {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      clearAuth();
       window.location.assign('/login');
     }
     return Promise.reject(error);

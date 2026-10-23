@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { AUTH_CHANGE_EVENT } from './auth';
 import BottomNav from './components/BottomNav';
 import LoginPage from './pages/LoginPage';
 import TopBar from './components/TopBar';
@@ -11,7 +12,18 @@ import NotificationsPage from './pages/NotificationsPage';
 import DailySummaryPage from './pages/DailySummaryPage';
 
 export default function App() {
-  const token = localStorage.getItem('token');
+  const [token, setToken] = useState(() => localStorage.getItem('token'));
+
+  useEffect(() => {
+    const syncToken = () => setToken(localStorage.getItem('token'));
+    window.addEventListener(AUTH_CHANGE_EVENT, syncToken);
+    window.addEventListener('storage', syncToken);
+
+    return () => {
+      window.removeEventListener(AUTH_CHANGE_EVENT, syncToken);
+      window.removeEventListener('storage', syncToken);
+    };
+  }, []);
 
   return (
     <>

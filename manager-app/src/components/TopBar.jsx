@@ -1,5 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { clearAuth } from '../auth';
 
 const PAGE_TITLES = {
   '/': '🍽️ New Order',
@@ -14,8 +15,7 @@ export default function TopBar() {
   const navigate = useNavigate();
 
   function logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    clearAuth();
     navigate('/login', { replace: true });
   }
 
