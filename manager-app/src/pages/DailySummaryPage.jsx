@@ -5,6 +5,7 @@ export default function DailySummaryPage() {
   const [summary, setSummary] = useState(null);
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(true);
+  const netProfit = Number(summary?.net_profit || 0);
 
   useEffect(() => {
     setLoading(true);
@@ -33,9 +34,21 @@ export default function DailySummaryPage() {
           <div className="summary-cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12, marginBottom: 16 }}>
             <SumCard icon="🧾" label="Total Orders" value={summary.order_count} color="#2563eb" />
             <SumCard icon="💰" label="Total Revenue" value={`$${summary.total_revenue.toFixed(2)}`} color="var(--success)" />
+            <SumCard icon="🥩" label="Cost of Goods Sold" value={`$${Number(summary.cogs || 0).toFixed(2)}`} color="#d97706" />
+            <SumCard icon="🏢" label="Operating Expenses" value={`$${Number(summary.operating_costs || 0).toFixed(2)}`} color="#7c3aed" />
+            <SumCard icon="📦" label="Purchases (separate)" value={`$${Number(summary.purchase_costs || 0).toFixed(2)}`} color="#2563eb" />
+            <SumCard
+              icon={netProfit >= 0 ? '✅' : '❌'}
+              label={netProfit >= 0 ? 'Net Profit' : 'Net Loss'}
+              value={`$${netProfit.toFixed(2)}`}
+              color={netProfit >= 0 ? 'var(--success)' : 'var(--danger)'}
+            />
             <SumCard icon="💵" label="Cash Sales" value={`$${summary.cash_revenue.toFixed(2)}`} color="var(--primary)" />
             <SumCard icon="💳" label="Card Sales" value={`$${summary.card_revenue.toFixed(2)}`} color="#7c3aed" />
           </div>
+          <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 16 }}>
+            Net profit = revenue − cost of goods sold − operating expenses. Purchases are shown separately and are not deducted twice.
+          </p>
 
           {summary.top_items_today?.length > 0 && (
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>

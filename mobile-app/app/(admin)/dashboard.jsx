@@ -71,6 +71,16 @@ export default function DashboardScreen() {
           <StatCard icon="📋" label="Orders" value={daily?.order_count ?? 0} style={styles.statCard} />
           <StatCard icon="💰" label="Revenue" value={`ETB ${parseFloat(daily?.total_revenue || 0).toFixed(0)}`} color={colors.success} style={styles.statCard} />
           <StatCard icon="💵" label="Cash" value={`ETB ${parseFloat(daily?.cash_revenue || 0).toFixed(0)}`} style={styles.statCard} />
+          <StatCard icon="🥩" label="COGS" value={`ETB ${parseFloat(daily?.cogs || 0).toFixed(0)}`} color={colors.warning} style={styles.statCard} />
+          <StatCard icon="🧾" label="Operating" value={`ETB ${parseFloat(daily?.operating_costs || 0).toFixed(0)}`} style={styles.statCard} />
+          <StatCard
+            icon={(daily?.net_profit || 0) >= 0 ? '✅' : '❌'}
+            label={(daily?.net_profit || 0) >= 0 ? 'Net Profit' : 'Net Loss'}
+            value={`ETB ${parseFloat(daily?.net_profit || 0).toFixed(0)}`}
+            color={(daily?.net_profit || 0) >= 0 ? colors.success : colors.danger}
+            style={styles.statCard}
+          />
+          <StatCard icon="📦" label="Purchases (separate)" value={`ETB ${parseFloat(daily?.purchase_costs || 0).toFixed(0)}`} style={styles.statCard} />
           <StatCard icon="⚠️" label="Low Stock" value={lowStock.length} color={lowStock.length > 0 ? colors.danger : colors.success} style={styles.statCard} />
         </View>
 
@@ -80,9 +90,10 @@ export default function DashboardScreen() {
           <StatCard icon="📈" label="Revenue" value={`ETB ${parseFloat(monthly?.summary?.revenue || 0).toFixed(0)}`} color={colors.success} style={styles.statCard} />
           <StatCard icon="📉" label="COGS" value={`ETB ${parseFloat(monthly?.summary?.cogs || 0).toFixed(0)}`} color={colors.warning} style={styles.statCard} />
           <StatCard icon="🧾" label="Operating" value={`ETB ${parseFloat(monthly?.summary?.operating_costs || 0).toFixed(0)}`} style={styles.statCard} />
+          <StatCard icon="📦" label="Purchases (separate)" value={`ETB ${parseFloat(monthly?.summary?.purchase_costs || 0).toFixed(0)}`} style={styles.statCard} />
           <StatCard
             icon={profit >= 0 ? '✅' : '❌'}
-            label="Net Profit"
+            label={profit >= 0 ? 'Net Profit' : 'Net Loss'}
             value={`ETB ${parseFloat(profit).toFixed(0)}`}
             sub={`${profitMargin}% margin`}
             color={profit >= 0 ? colors.success : colors.danger}

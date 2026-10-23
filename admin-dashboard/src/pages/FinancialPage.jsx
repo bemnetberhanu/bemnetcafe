@@ -89,14 +89,18 @@ export default function FinancialPage() {
             <StatCard label="Cost of Goods Sold" value={`$${report.summary.cogs.toFixed(2)}`} icon="🥩" color="var(--color-warning)" />
             <StatCard label="Gross Profit" value={`$${report.summary.gross_profit.toFixed(2)}`} icon="💵" color="var(--color-info)" />
             <StatCard label="Operating Costs" value={`$${report.summary.operating_costs.toFixed(2)}`} icon="🏢" color="#7c3aed" />
+            <StatCard label="Purchases (separate)" value={`$${Number(report.summary.purchase_costs || 0).toFixed(2)}`} icon="📦" color="var(--color-primary)" />
             <StatCard
-              label="Net Profit"
+              label={report.summary.net_profit >= 0 ? 'Net Profit' : 'Net Loss'}
               value={`$${report.summary.net_profit.toFixed(2)}`}
-              icon="🏆"
+              icon={report.summary.net_profit >= 0 ? '🏆' : '❌'}
               color={report.summary.net_profit >= 0 ? 'var(--color-success)' : 'var(--color-danger)'}
               sub={`${report.summary.profit_margin}% margin`}
             />
           </div>
+          <p style={{ color: 'var(--color-text-muted)', fontSize: 12, marginTop: -12, marginBottom: 20 }}>
+            Net profit = revenue − cost of goods sold − operating costs. Purchases are shown separately and are not deducted twice.
+          </p>
 
           <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', padding: 24, boxShadow: 'var(--shadow)', marginBottom: 20 }}>
             <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>Revenue vs Profit Over Time</h3>

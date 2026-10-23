@@ -71,6 +71,31 @@ export default function DashboardPage() {
           color="var(--color-info)"
         />
         <StatCard
+          label="Today's COGS"
+          value={`$${summary?.cogs?.toFixed(2) || '0.00'}`}
+          icon="🥩"
+          color="var(--color-warning)"
+        />
+        <StatCard
+          label="Today's Operating Expenses"
+          value={`$${summary?.operating_costs?.toFixed(2) || '0.00'}`}
+          icon="🏢"
+          color="var(--color-info)"
+        />
+        <StatCard
+          label={summary?.net_profit < 0 ? "Today's Net Loss" : "Today's Net Profit"}
+          value={`$${summary?.net_profit?.toFixed(2) || '0.00'}`}
+          icon={summary?.net_profit < 0 ? '❌' : '🏆'}
+          color={summary?.net_profit < 0 ? 'var(--color-danger)' : 'var(--color-success)'}
+          sub={`${summary?.profit_margin || '0.00'}% margin`}
+        />
+        <StatCard
+          label="Today's Purchases (separate)"
+          value={`$${summary?.purchase_costs?.toFixed(2) || '0.00'}`}
+          icon="📦"
+          color="var(--color-primary)"
+        />
+        <StatCard
           label="Low Stock Alerts"
           value={lowStock.length}
           icon="⚠️"
@@ -85,7 +110,8 @@ export default function DashboardPage() {
           <StatCard label="Monthly Revenue" value={`$${financial.summary.revenue.toFixed(2)}`} icon="📈" color="var(--color-success)" />
           <StatCard label="Monthly COGS" value={`$${financial.summary.cogs.toFixed(2)}`} icon="🥩" color="var(--color-warning)" />
           <StatCard label="Operating Costs" value={`$${financial.summary.operating_costs.toFixed(2)}`} icon="🏢" color="var(--color-info)" />
-          <StatCard label="Net Profit" value={`$${financial.summary.net_profit.toFixed(2)}`} icon="🏆" color={financial.summary.net_profit >= 0 ? 'var(--color-success)' : 'var(--color-danger)'} sub={`${financial.summary.profit_margin}% margin`} />
+          <StatCard label="Purchases (separate)" value={`$${Number(financial.summary.purchase_costs || 0).toFixed(2)}`} icon="📦" color="var(--color-primary)" />
+          <StatCard label={financial.summary.net_profit >= 0 ? 'Net Profit' : 'Net Loss'} value={`$${financial.summary.net_profit.toFixed(2)}`} icon={financial.summary.net_profit >= 0 ? '🏆' : '❌'} color={financial.summary.net_profit >= 0 ? 'var(--color-success)' : 'var(--color-danger)'} sub={`${financial.summary.profit_margin}% margin`} />
         </div>
       )}
 

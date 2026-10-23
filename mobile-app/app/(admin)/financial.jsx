@@ -80,9 +80,10 @@ export default function FinancialScreen() {
             <StatCard icon="📈" label="Revenue" value={`ETB ${parseFloat(s?.revenue || 0).toFixed(0)}`} color={colors.success} style={styles.statCard} />
             <StatCard icon="🥩" label="COGS" value={`ETB ${parseFloat(s?.cogs || 0).toFixed(0)}`} color={colors.warning} style={styles.statCard} />
             <StatCard icon="🧾" label="Operating" value={`ETB ${parseFloat(s?.operating_costs || 0).toFixed(0)}`} style={styles.statCard} />
+            <StatCard icon="📦" label="Purchases (separate)" value={`ETB ${parseFloat(s?.purchase_costs || 0).toFixed(0)}`} style={styles.statCard} />
             <StatCard
               icon={profit >= 0 ? '✅' : '❌'}
-              label="Net Profit"
+              label={profit >= 0 ? 'Net Profit' : 'Net Loss'}
               value={`ETB ${profit.toFixed(0)}`}
               sub={`${s?.profit_margin || '0.00'}% margin`}
               color={profit >= 0 ? colors.success : colors.danger}
@@ -97,6 +98,9 @@ export default function FinancialScreen() {
               ETB {parseFloat(s?.gross_profit || 0).toFixed(2)}
             </Text>
           </View>
+          <Text style={styles.profitNote}>
+            Net profit = revenue − COGS − operating expenses. Purchases are shown separately to avoid double-counting inventory.
+          </Text>
 
           {/* Chart data table */}
           {report?.chart_data?.length > 0 && (
@@ -139,6 +143,7 @@ const styles = StyleSheet.create({
   grossCard: { marginTop: spacing.md, backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing.xl, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', ...shadow.sm },
   grossLabel: { fontSize: 13, color: colors.textSecondary, flex: 1 },
   grossValue: { fontSize: 18, fontWeight: '800' },
+  profitNote: { fontSize: 12, color: colors.muted, lineHeight: 18, marginTop: spacing.md },
   chartRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border },
   chartPeriod: { fontSize: 12, color: colors.muted, fontWeight: '600', minWidth: 80 },
   chartBars: { alignItems: 'flex-end' },

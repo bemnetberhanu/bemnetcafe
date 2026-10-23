@@ -38,6 +38,8 @@ export default function SummaryScreen() {
     setLoading(true);
   }
 
+  const netProfit = parseFloat(summary?.net_profit || 0);
+
   if (loading) {
     return <View style={styles.centered}><ActivityIndicator color={colors.primary} size="large" /></View>;
   }
@@ -70,14 +72,13 @@ export default function SummaryScreen() {
           </TouchableOpacity>
         </View>
 
-        {!summary || summary.order_count === 0 ? (
+        {!summary ? (
           <View style={styles.emptyBox}>
             <Text style={{ fontSize: 40 }}>📭</Text>
-            <Text style={styles.emptyText}>No orders recorded for this day.</Text>
+            <Text style={styles.emptyText}>Summary is unavailable.</Text>
           </View>
         ) : (
           <>
-            {/* Stat cards */}
             <View style={styles.statsRow}>
               <StatCard icon="📋" label="Total Orders" value={summary.order_count} style={styles.statCard} />
               <StatCard icon="💰" label="Revenue" value={`ETB ${parseFloat(summary.total_revenue).toFixed(0)}`} color={colors.success} style={styles.statCard} />
@@ -86,6 +87,23 @@ export default function SummaryScreen() {
               <StatCard icon="💵" label="Cash Sales" value={`ETB ${parseFloat(summary.cash_revenue).toFixed(0)}`} style={styles.statCard} />
               <StatCard icon="💳" label="Card Sales" value={`ETB ${parseFloat(summary.card_revenue).toFixed(0)}`} style={styles.statCard} />
             </View>
+            <View style={styles.statsRow}>
+              <StatCard icon="🥩" label="COGS" value={`ETB ${parseFloat(summary.cogs || 0).toFixed(0)}`} color={colors.warning} style={styles.statCard} />
+              <StatCard icon="🧾" label="Operating Expenses" value={`ETB ${parseFloat(summary.operating_costs || 0).toFixed(0)}`} style={styles.statCard} />
+            </View>
+            <View style={styles.statsRow}>
+              <StatCard icon="📦" label="Purchases (separate)" value={`ETB ${parseFloat(summary.purchase_costs || 0).toFixed(0)}`} style={styles.statCard} />
+              <StatCard
+                icon={netProfit >= 0 ? '✅' : '❌'}
+                label={netProfit >= 0 ? 'Net Profit' : 'Net Loss'}
+                value={`ETB ${netProfit.toFixed(0)}`}
+                color={netProfit >= 0 ? colors.success : colors.danger}
+                style={styles.statCard}
+              />
+            </View>
+            <Text style={styles.profitNote}>
+              Net profit = revenue − COGS − operating expenses. Purchases are shown separately to avoid double-counting inventory.
+            </Text>
 
             {/* Top items */}
             {summary.top_items_today?.length > 0 && (
@@ -100,6 +118,12 @@ export default function SummaryScreen() {
                     </View>
                   </View>
                 ))}
+              </View>
+            )}
+            {summary.order_count === 0 && (
+              <View style={styles.emptyBox}>
+                <Text style={{ fontSize: 40 }}>📭</Text>
+                <Text style={styles.emptyText}>No orders recorded for this day.</Text>
               </View>
             )}
           </>
@@ -120,6 +144,7 @@ const styles = StyleSheet.create({
   dateArrowText: { fontSize: 14, fontWeight: '700', color: colors.primary },
   dateLabel: { fontSize: 13, fontWeight: '600', color: colors.text, textAlign: 'center', flex: 1 },
   statsRow: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.md },
+  profitNote: { fontSize: 12, color: colors.muted, lineHeight: 18, marginBottom: spacing.md },
   statCard: { flex: 1 },
   emptyBox: { alignItems: 'center', padding: spacing.xxxl * 2 },
   emptyText: { fontSize: 15, color: colors.muted, marginTop: spacing.md, textAlign: 'center' },

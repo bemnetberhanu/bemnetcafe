@@ -1,5 +1,35 @@
 const pool = require('../database/db');
 
+async function getCosts(startDate, endDate) {
+  const [cogsRows] = await pool.query(
+    `SELECT COALESCE(SUM(oi.quantity * ri.quantity_required * i.cost_per_unit), 0) AS cogs
+     FROM order_items oi
+     JOIN orders o ON o.id = oi.order_id
+     JOIN recipe_ingredients ri ON ri.recipe_item_id = oi.recipe_item_id
+     JOIN ingredients i ON i.id = ri.ingredient_id
+     WHERE o.order_date >= ? AND o.order_date < ?`,
+    [startDate, endDate]
+  );
+  const [expenseRows] = await pool.query(
+    `SELECT COALESCE(SUM(amount), 0) AS total_expenses
+     FROM operating_expenses
+     WHERE expense_date >= ? AND expense_date < ?`,
+    [startDate, endDate]
+  );
+  const [purchaseRows] = await pool.query(
+    `SELECT COALESCE(SUM(total_cost), 0) AS total_purchases
+     FROM purchases
+     WHERE purchase_date >= ? AND purchase_date < ?`,
+    [startDate, endDate]
+  );
+
+  return {
+    cogs: parseFloat(cogsRows[0].cogs),
+    operatingCosts: parseFloat(expenseRows[0].total_expenses),
+    purchaseCosts: parseFloat(purchaseRows[0].total_purchases),
+  };
+}
+
 async function getFinancialReport(startDate, endDate, groupBy = 'day') {
   // Revenue
   const [revRows] = await pool.query(
@@ -10,26 +40,7 @@ async function getFinancialReport(startDate, endDate, groupBy = 'day') {
   );
   const revenue = parseFloat(revRows[0].revenue);
 
-  // COGS
-  const [cogsRows] = await pool.query(
-    `SELECT COALESCE(SUM(oi.quantity * ri.quantity_required * i.cost_per_unit), 0) AS cogs
-     FROM order_items oi
-     JOIN orders o ON o.id = oi.order_id
-     JOIN recipe_ingredients ri ON ri.recipe_item_id = oi.recipe_item_id
-     JOIN ingredients i ON i.id = ri.ingredient_id
-     WHERE o.order_date >= ? AND o.order_date < ?`,
-    [startDate, endDate]
-  );
-  const cogs = parseFloat(cogsRows[0].cogs);
-
-  // Operating expenses
-  const [expRows] = await pool.query(
-    `SELECT COALESCE(SUM(amount), 0) AS total_expenses
-     FROM operating_expenses
-     WHERE expense_date >= ? AND expense_date < ?`,
-    [startDate, endDate]
-  );
-  const operatingCosts = parseFloat(expRows[0].total_expenses);
+  const { cogs, operatingCosts, purchaseCosts } = await getCosts(startDate, endDate);
 
   const profit = revenue - (cogs + operatingCosts);
 
@@ -42,18 +53,62 @@ async function getFinancialReport(startDate, endDate, groupBy = 'day') {
 
   const [chartRows] = await pool.query(
     `SELECT
-       DATE_FORMAT(order_date, ?) AS period,
-       COALESCE(SUM(total_amount), 0) AS revenue
-     FROM orders
-     WHERE order_date >= ? AND order_date < ?
-     GROUP BY period
-     ORDER BY period`,
+       DATE_FORMAT(o.order_date, ?) AS period,
+       COALESCE(SUM(o.total_amount), 0) AS revenue
+     FROM orders o
+     WHERE o.order_date >= ? AND o.order_date < ?
+     GROUP BY period`,
     [dateFormat, startDate, endDate]
-  );  const chartData = chartRows.map(row => ({
-    period: row.period,
-    revenue: parseFloat(row.revenue),
-    profit: revenue > 0 ? parseFloat(row.revenue) * (profit / revenue) : 0,
-  }));
+  );
+  const [cogsChartRows] = await pool.query(
+    `SELECT
+       DATE_FORMAT(o.order_date, ?) AS period,
+       COALESCE(SUM(oi.quantity * ri.quantity_required * i.cost_per_unit), 0) AS cogs
+     FROM order_items oi
+     JOIN orders o ON o.id = oi.order_id
+     JOIN recipe_ingredients ri ON ri.recipe_item_id = oi.recipe_item_id
+     JOIN ingredients i ON i.id = ri.ingredient_id
+     WHERE o.order_date >= ? AND o.order_date < ?
+     GROUP BY period`,
+    [dateFormat, startDate, endDate]
+  );
+  const [expenseChartRows] = await pool.query(
+    `SELECT DATE_FORMAT(expense_date, ?) AS period, COALESCE(SUM(amount), 0) AS expenses
+     FROM operating_expenses
+     WHERE expense_date >= ? AND expense_date < ?
+     GROUP BY period`,
+    [dateFormat, startDate, endDate]
+  );
+  const chartPeriods = new Map(chartRows.map(row => [
+    row.period,
+    {
+      period: row.period,
+      revenue: parseFloat(row.revenue),
+      cogs: 0,
+      operatingCosts: 0,
+    },
+  ]));
+  for (const row of cogsChartRows) {
+    const period = chartPeriods.get(row.period);
+    if (period) period.cogs = parseFloat(row.cogs);
+  }
+  for (const row of expenseChartRows) {
+    const period = chartPeriods.get(row.period) || {
+      period: row.period,
+      revenue: 0,
+      cogs: 0,
+      operatingCosts: 0,
+    };
+    period.operatingCosts = parseFloat(row.expenses);
+    chartPeriods.set(row.period, period);
+  }
+  const chartData = [...chartPeriods.values()]
+    .sort((a, b) => a.period.localeCompare(b.period))
+    .map(row => ({
+      period: row.period,
+      revenue: row.revenue,
+      profit: row.revenue - row.cogs - row.operatingCosts,
+    }));
 
   return {
     period: { start: startDate, end: endDate, groupBy },
@@ -61,6 +116,7 @@ async function getFinancialReport(startDate, endDate, groupBy = 'day') {
       revenue,
       cogs,
       operating_costs: operatingCosts,
+      purchase_costs: purchaseCosts,
       gross_profit: revenue - cogs,
       net_profit: profit,
       profit_margin: revenue > 0 ? ((profit / revenue) * 100).toFixed(2) : '0.00',
@@ -150,8 +206,8 @@ async function getDayOfWeekPatterns(days = 90) {
 async function getDailySummary(date = new Date()) {
   const dayStart = new Date(date);
   dayStart.setHours(0, 0, 0, 0);
-  const dayEnd = new Date(date);
-  dayEnd.setHours(23, 59, 59, 999);
+  const dayEnd = new Date(dayStart);
+  dayEnd.setDate(dayEnd.getDate() + 1);
 
   const [orderRows] = await pool.query(
     `SELECT
@@ -160,16 +216,18 @@ async function getDailySummary(date = new Date()) {
        COALESCE(SUM(CASE WHEN payment_method = 'cash' THEN total_amount ELSE 0 END), 0) AS cash_revenue,
        COALESCE(SUM(CASE WHEN payment_method = 'card' THEN total_amount ELSE 0 END), 0) AS card_revenue
      FROM orders
-     WHERE order_date >= ? AND order_date <= ?`,
+     WHERE order_date >= ? AND order_date < ?`,
     [dayStart, dayEnd]
   );
+
+  const { cogs, operatingCosts, purchaseCosts } = await getCosts(dayStart, dayEnd);
 
   const [itemRows] = await pool.query(
     `SELECT ri.name, SUM(oi.quantity) AS qty_sold
      FROM order_items oi
      JOIN orders o ON o.id = oi.order_id
      JOIN recipe_items ri ON ri.id = oi.recipe_item_id
-     WHERE o.order_date >= ? AND o.order_date <= ?
+     WHERE o.order_date >= ? AND o.order_date < ?
      GROUP BY ri.name
      ORDER BY qty_sold DESC
      LIMIT 5`,
@@ -177,12 +235,20 @@ async function getDailySummary(date = new Date()) {
   );
 
   const s = orderRows[0];
+  const totalRevenue = parseFloat(s.total_revenue);
+  const netProfit = totalRevenue - cogs - operatingCosts;
   return {
     date: dayStart.toISOString().split('T')[0],
     order_count: parseInt(s.order_count),
-    total_revenue: parseFloat(s.total_revenue),
+    total_revenue: totalRevenue,
     cash_revenue: parseFloat(s.cash_revenue),
     card_revenue: parseFloat(s.card_revenue),
+    cogs,
+    gross_profit: totalRevenue - cogs,
+    operating_costs: operatingCosts,
+    purchase_costs: purchaseCosts,
+    net_profit: netProfit,
+    profit_margin: totalRevenue > 0 ? ((netProfit / totalRevenue) * 100).toFixed(2) : '0.00',
     top_items_today: itemRows.map(r => ({
       item: r.name,
       qty_sold: parseInt(r.qty_sold),
