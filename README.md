@@ -162,46 +162,62 @@ Variation overrides supported:
 
 ---
 
-## Production Deployment on Railway
+## Free Hosting Setup
 
-The project is not online yet. This setup uses Railway for the API and MySQL database, and Railway services with Caddy for both websites. You need a GitHub repository connected to Railway. The root `.gitignore` excludes dependency folders, build output, and `.env` files. Never upload real `.env` files.
+The deployment uses three services:
 
-### Use Netlify for the websites instead
+- **Cloudflare Pages** for the admin dashboard and manager PWA.
+- **Render** for the Express API. The included [`render.yaml`](./render.yaml) configures a free Node.js web service and prompts for database details without storing them in source control.
+- **Aiven MySQL** for restaurant data. Confirm the free plan is available for your account and region; provider plans and limits can change.
 
-Netlify can host the Admin Dashboard and Manager App as static sites, but it cannot host this Express API as a persistent Node.js server or provide the MySQL database. The API and MySQL database must still be hosted elsewhere before the apps can sign in or load data.
+This setup is for testing and light use, not guaranteed restaurant operations. Render's free web services sleep after 15 minutes without requests and may take about a minute to wake. Usage and database limits apply.
 
-1. In Netlify, choose **Add new project → Import an existing project** and connect the GitHub repository.
-2. Select the `admin-dashboard` directory as the site to deploy. Its `netlify.toml` sets the build command, publish directory, and SPA refresh fallback.
-3. Create a second Netlify site from the same repository, this time selecting `manager-app`.
-4. For each Netlify site, set `VITE_API_URL` to the hosted API URL ending in `/api` (for example, `https://your-api.example.com/api`), then redeploy.
-5. Add both Netlify site origins to the API's `CORS_ORIGINS` setting.
+Never upload `.env` files or put database credentials in a frontend. The root `.gitignore` excludes local environment files.
 
-Netlify rebuilds a site when changes are pushed to its connected Git branch. See Netlify's [monorepo deployment guide](https://docs.netlify.com/build/configure-builds/monorepos/) for the site-directory setup.
+### 1. Create the MySQL database
 
-### One-time setup
+1. Create an Aiven MySQL service. Select a free plan only if Aiven offers it for your account and region.
+2. Note the service's host, port, database name, username, and password.
+3. Download the service's CA certificate if Aiven provides one. The backend verifies TLS certificates when `DB_SSL=true`; don't disable verification to work around connection errors.
 
-1. Create a **private** GitHub repository and upload this project.
-2. In Railway, create a project from that GitHub repository. Add a MySQL database service using **New → Database → MySQL**.
-3. Add the backend as a service from the same repository. Set its root directory to `/backend`, install command to `npm ci`, and start command to `npm start`.
-4. In the backend service, add:
-   - `NODE_ENV` = `production`
-   - `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD` as references to the matching variables in the Railway MySQL service (`MYSQLHOST`, `MYSQLPORT`, `MYSQLDATABASE`, `MYSQLUSER`, and `MYSQLPASSWORD`).
-   - `JWT_SECRET` = a newly generated random value of at least 32 characters.
-   - `CORS_ORIGINS` = the two website origins after you create them, separated by a comma and without trailing slashes.
-5. Deploy the backend and generate a public domain in its Railway service settings. Its health check is `/api/health`.
-6. Add two more services from the same repository:
-   - Admin site root directory: `/admin-dashboard`
-   - Manager site root directory: `/manager-app`
-   
-   Each folder contains a `Dockerfile` that builds the React app and a `Caddyfile` that serves it, supports page refreshes, and forwards `/api` requests to the backend. For each site, add an `API_URL` variable containing the backend's public origin (for example, `https://your-api.up.railway.app`, without `/api`).
-7. Generate a public domain for each website. Set backend `CORS_ORIGINS` to those two exact HTTPS origins, then redeploy the backend.
-8. Run `npm run migrate` once from the backend service's command console to create the database tables.
-9. If this is a brand-new database, you may run `npm run seed` once to create starter menu data and the first admin and manager accounts. Before doing so, add `INITIAL_ADMIN_PASSWORD` and `INITIAL_MANAGER_PASSWORD` to the backend environment, each with a unique password of at least 12 characters. Remove those two variables after seeding. The seed also inserts example restaurant data; review and replace it before real use. Do not run the seed on a database that already contains restaurant data.
+### 2. Create the frontend sites on Cloudflare Pages
 
-### Updates and backups
+Create two Pages projects from the GitHub repository using Git integration and the `main` branch:
 
-- Once connected, pushing a code change to the deployment branch starts a new build and deployment. Check Railway deployment logs if a build fails.
-- If the backend domain changes, update `API_URL` in both frontend services and redeploy them.
-- Before database migrations or significant updates, take a database backup. Schedule automatic backups and make sure you know how to restore one.
-- Never run `npm run seed` as a routine update; it is for initializing a new database only.
-- The Manager App and mobile app use individual account sign-in; do not add a shared API key to frontend code or environment variables bundled into client apps.
+| Site | Root directory | Build command | Output directory |
+|---|---|---|---|
+| Admin dashboard | `admin-dashboard` | `npm run build` | `dist` |
+| Manager PWA | `manager-app` | `npm run build` | `dist` |
+
+Deploy both projects to get their `pages.dev` URLs. The apps will not connect to a working API until the next step is complete. Cloudflare Pages automatically rebuilds on pushes to the connected branch.
+
+### 3. Deploy the API on Render
+
+1. In Render, choose **New → Blueprint** and connect the GitHub repository `bemnetberhanu/bemnetcafe`. Render reads [`render.yaml`](./render.yaml) and proposes the API service.
+2. Confirm the API service uses the `free` plan. Enter the Aiven connection details when prompted for `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD`.
+3. If required by Aiven, enter the downloaded CA certificate as `DB_SSL_CA`.
+4. Enter both Cloudflare Pages HTTPS origins into `CORS_ORIGINS`, separated by a comma and without trailing slashes.
+5. Render generates a private `JWT_SECRET`. Keep it secret.
+6. Deploy the service. Its health endpoint will be `https://YOUR-API.onrender.com/api/health`.
+
+### 4. Create the database tables and initial accounts
+
+Render Shell access requires a paid service plan, so run the one-time database commands from your computer:
+
+1. In the `backend` folder, copy `.env.example` to `.env` and fill in the same Aiven database connection details and CA certificate used by Render.
+2. If Aiven restricts allowed IPs, temporarily allow your computer's current public IP address in the Aiven service's connection settings.
+3. In a terminal opened in the `backend` folder, run `npm run migrate` once to create the tables.
+4. For a new database only, add `INITIAL_ADMIN_PASSWORD` and `INITIAL_MANAGER_PASSWORD` to the local `.env`, using different passwords of at least 12 characters, then run `npm run seed` once.
+5. Remove those initial-password entries from `.env` after seeding. The seed adds sample menu and inventory data; replace it before using the system for real. Never seed a database containing real data or run seed as an update. Back up the database before migrations or data changes.
+
+The `.env` file is ignored by Git. Keep it on your computer and never upload it.
+
+### 5. Connect the frontend apps
+
+In both Cloudflare Pages projects, set `VITE_API_URL` to `https://YOUR-API.onrender.com/api`, then trigger a new deployment. Test sign-in and basic data operations in both apps. The manager app requires a personal manager account; it no longer uses a shared public key.
+
+### Updates
+
+- Push code changes to GitHub `main`; Render and Cloudflare Pages build and deploy updates automatically.
+- If the API URL or frontend domains change, update `VITE_API_URL` on both Pages projects and `CORS_ORIGINS` on Render.
+- Back up the database regularly. Do not run `npm run seed` as an update.

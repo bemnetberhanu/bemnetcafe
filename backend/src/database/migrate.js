@@ -145,33 +145,33 @@ const migrations = [
 
   // ─── Performance indexes for 5-year data retention ───────────────────────
   // These turn full-table scans into index seeks on the two highest-volume tables.
-  // Safe to run multiple times — CREATE INDEX IF NOT EXISTS is idempotent.
+  // Duplicate index names are ignored by the migration loop below.
 
   // orders.order_date — every analytics, financial, and listing query filters on this
-  `CREATE INDEX IF NOT EXISTS idx_orders_order_date
+  `CREATE INDEX idx_orders_order_date
      ON orders (order_date)`,
 
   // orders.order_date + total_amount covering index — financial SUM queries read
   // both columns together; this avoids touching the main row at all
-  `CREATE INDEX IF NOT EXISTS idx_orders_date_amount
+  `CREATE INDEX idx_orders_date_amount
      ON orders (order_date, total_amount)`,
 
   // order_items.order_id — JOIN from orders → order_items (already has FK but
   // MySQL does not auto-create an index on the child FK side in all versions)
-  `CREATE INDEX IF NOT EXISTS idx_order_items_order_id
+  `CREATE INDEX idx_order_items_order_id
      ON order_items (order_id)`,
 
   // order_items.recipe_item_id — used in every sales ranking and COGS query
-  `CREATE INDEX IF NOT EXISTS idx_order_items_recipe_item_id
+  `CREATE INDEX idx_order_items_recipe_item_id
      ON order_items (recipe_item_id)`,
 
   // operating_expenses.expense_date — financial report sums filter on this
-  `CREATE INDEX IF NOT EXISTS idx_expenses_date
+  `CREATE INDEX idx_expenses_date
      ON operating_expenses (expense_date)`,
 
   // notifications — dashboard only needs unread ones; keeps that query fast
   // even after years of read notifications pile up
-  `CREATE INDEX IF NOT EXISTS idx_notifications_unread
+  `CREATE INDEX idx_notifications_unread
      ON notifications (is_read, created_at)`,
 ];
 
@@ -181,7 +181,11 @@ async function migrate() {
     console.log('🚀 Running database migrations...');
     await conn.query('SET FOREIGN_KEY_CHECKS = 0');
     for (const sql of migrations) {
-      await conn.query(sql);
+      try {
+        await conn.query(sql);
+      } catch (err) {
+        if (err.code !== 'ER_DUP_KEYNAME') throw err;
+      }
     }
     await conn.query('SET FOREIGN_KEY_CHECKS = 1');
     console.log('✅ All migrations completed successfully');

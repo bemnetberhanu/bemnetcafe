@@ -1,6 +1,15 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
+const ssl = process.env.DB_SSL === 'true'
+  ? {
+    rejectUnauthorized: true,
+    ...(process.env.DB_SSL_CA
+      ? { ca: process.env.DB_SSL_CA.replace(/\\n/g, '\n') }
+      : {}),
+  }
+  : undefined;
+
 const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT) || 3306,
@@ -10,6 +19,7 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+  ...(ssl ? { ssl } : {}),
   // Return plain objects instead of RowDataPacket instances
   rowsAsArray: false,
 });
