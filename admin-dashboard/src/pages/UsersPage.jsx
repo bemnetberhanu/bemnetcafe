@@ -73,7 +73,7 @@ export default function UsersPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div className="admin-page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700 }}>Users</h1>
           <p style={{ color: 'var(--color-text-muted)', fontSize: 14 }}>Manage admin and manager accounts</p>
@@ -86,7 +86,7 @@ export default function UsersPage() {
       {loading ? (
         <div style={{ padding: 40, color: 'var(--color-text-muted)' }}>Loading...</div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 14 }}>
+        <div className="users-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 14 }}>
           {users.map(user => (
             <div key={user.id} style={{
               background: 'var(--color-surface)', border: '1px solid var(--color-border)',

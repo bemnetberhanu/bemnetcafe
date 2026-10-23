@@ -56,12 +56,12 @@ export default function FinancialPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div className="admin-page-header financial-page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700 }}>Financial Report</h1>
           <p style={{ color: 'var(--color-text-muted)', fontSize: 14 }}>Revenue, costs, and profit overview</p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div className="admin-filter-controls" style={{ display: 'flex', gap: 8 }}>
           {Object.keys(PRESETS).map(key => (
             <button
               key={key}

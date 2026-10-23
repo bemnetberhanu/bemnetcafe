@@ -66,7 +66,7 @@ export default function IngredientsPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div className="admin-page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700 }}>Ingredients</h1>
           <p style={{ color: 'var(--color-text-muted)', fontSize: 14 }}>Manage your inventory stock levels and reorder points</p>
@@ -86,7 +86,7 @@ export default function IngredientsPage() {
       {loading ? (
         <div style={{ padding: 40, color: 'var(--color-text-muted)' }}>Loading...</div>
       ) : (
-        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow)', overflow: 'hidden' }}>
+        <div className="admin-table-scroll" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow)', overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
             <thead>
               <tr style={{ background: 'var(--color-bg)' }}>
@@ -138,7 +138,7 @@ export default function IngredientsPage() {
             <FormField label="Unit of Measure" required>
               <input required style={inputStyle} value={form.unit_of_measure} onChange={e => setForm({ ...form, unit_of_measure: e.target.value })} placeholder="kg, liters, pieces..." />
             </FormField>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div className="admin-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <FormField label="Current Quantity">
                 <input type="number" step="0.001" min="0" style={inputStyle} value={form.current_quantity} onChange={e => setForm({ ...form, current_quantity: e.target.value })} placeholder="0" />
               </FormField>

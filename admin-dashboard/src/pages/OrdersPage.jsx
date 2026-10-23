@@ -26,18 +26,18 @@ export default function OrdersPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div className="admin-page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700 }}>Orders</h1>
           <p style={{ color: 'var(--color-text-muted)', fontSize: 14 }}>View all orders placed by the manager</p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div className="orders-date" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <label style={{ fontSize: 13, fontWeight: 500 }}>Date:</label>
           <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: 7, fontSize: 14 }} />
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
+      <div className="orders-summary" style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
         <div style={{ padding: '14px 20px', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow)' }}>
           <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 4 }}>TOTAL ORDERS</div>
           <div style={{ fontSize: 22, fontWeight: 700 }}>{orders.length}</div>
@@ -59,6 +59,7 @@ export default function OrdersPage() {
           {orders.map((order, i) => (
             <div key={order.id} style={{ borderBottom: i < orders.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
               <div
+                className="order-row"
                 style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 16, cursor: 'pointer' }}
                 onClick={() => setExpanded(expanded === order.id ? null : order.id)}
               >
@@ -102,7 +103,7 @@ function OrderDetail({ orderId }) {
   return (
     <div style={{ padding: '12px 20px 16px', background: 'var(--color-bg)', borderTop: '1px solid var(--color-border)' }}>
       {order.items?.map((item, i) => (
-        <div key={i} style={{ display: 'flex', gap: 12, padding: '6px 0', fontSize: 13 }}>
+        <div key={i} className="order-detail-row" style={{ display: 'flex', gap: 12, padding: '6px 0', fontSize: 13 }}>
           <span style={{ fontWeight: 500, flex: 1 }}>{item.item_name}{item.variation_name ? ` (${item.variation_name})` : ''}</span>
           <span style={{ color: 'var(--color-text-muted)' }}>×{item.quantity}</span>
           <span style={{ fontWeight: 600, minWidth: 70, textAlign: 'right' }}>${parseFloat(item.subtotal).toFixed(2)}</span>

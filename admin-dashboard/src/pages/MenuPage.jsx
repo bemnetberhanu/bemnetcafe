@@ -51,7 +51,7 @@ function NewIngredientForm({ onCreated, onCancel }) {
 
       <form onSubmit={handleCreate}>
         {/* Name + Unit */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+        <div className="new-ingredient-main" style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
           <input
             required
             placeholder="Ingredient name *"
@@ -88,7 +88,7 @@ function NewIngredientForm({ onCreated, onCancel }) {
         </div>
 
         {/* Optional stock details */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 6, marginBottom: 10 }}>
+        <div className="new-ingredient-fields" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 6, marginBottom: 10 }}>
           <input type="number" step="0.001" min="0" placeholder="Current qty" value={form.current_quantity}
             onChange={e => setForm({ ...form, current_quantity: e.target.value })}
             style={{ ...inputStyle, fontSize: 12, padding: '7px 9px' }} />
@@ -411,7 +411,7 @@ export default function MenuPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div className="admin-page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700 }}>Menu & Recipes</h1>
           <p style={{ color: 'var(--color-text-muted)', fontSize: 14 }}>
@@ -434,7 +434,7 @@ export default function MenuPage() {
             <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               {cat}
             </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
+            <div className="menu-items-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
               {catItems.map(item => (
                 <div key={item.id} style={{
                   background: 'var(--color-surface)', border: '1px solid var(--color-border)',
@@ -480,7 +480,7 @@ export default function MenuPage() {
       {showModal && (
         <Modal title={editing ? 'Edit Menu Item' : 'Add Menu Item'} onClose={() => setShowModal(false)} width={680}>
           <form onSubmit={handleSave}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div className="admin-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <FormField label="Name" required>
                 <input required style={inputStyle} value={form.name}
                   onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g., Doro Wot" />

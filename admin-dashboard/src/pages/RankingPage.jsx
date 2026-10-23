@@ -28,7 +28,7 @@ export default function RankingPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div className="admin-page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700 }}>Sales Ranking & Patterns</h1>
           <p style={{ color: 'var(--color-text-muted)', fontSize: 14 }}>Best sellers, worst sellers, and day-of-week trends</p>
@@ -47,7 +47,7 @@ export default function RankingPage() {
       {loading ? (
         <div style={{ padding: 40, color: 'var(--color-text-muted)' }}>Loading...</div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
+        <div className="ranking-columns" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
           {/* Top Sellers */}
           <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', padding: 24, boxShadow: 'var(--shadow)' }}>
             <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>🏆 Top Sellers</h3>

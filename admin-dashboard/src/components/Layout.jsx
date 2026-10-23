@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 
@@ -16,7 +16,18 @@ const navItems = [
 export default function Layout() {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(
+    () => !window.matchMedia('(max-width: 760px)').matches
+  );
+
+  useEffect(() => {
+    function syncSidebarToViewport() {
+      setSidebarOpen(!window.matchMedia('(max-width: 760px)').matches);
+    }
+
+    window.addEventListener('resize', syncSidebarToViewport);
+    return () => window.removeEventListener('resize', syncSidebarToViewport);
+  }, []);
 
   function handleLogout() {
     logout();
@@ -24,7 +35,7 @@ export default function Layout() {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
+    <div className="admin-layout" style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
       {/* Sidebar */}
       <aside style={{
         width: sidebarOpen ? 240 : 64,
@@ -34,7 +45,7 @@ export default function Layout() {
         flexDirection: 'column',
         transition: 'width 0.2s ease',
         flexShrink: 0,
-      }}>
+      }} className={`admin-sidebar${sidebarOpen ? ' is-open' : ''}`}>
         <div style={{ padding: '20px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={{ fontSize: 28 }}>🇪🇹</span>
           {sidebarOpen && (
@@ -96,11 +107,19 @@ export default function Layout() {
           </button>
         </div>
       </aside>
+      {sidebarOpen && (
+        <button
+          className="admin-sidebar-backdrop"
+          type="button"
+          onClick={() => setSidebarOpen(false)}
+          aria-label="Close navigation"
+        />
+      )}
 
       {/* Main content */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div className="admin-main" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* Top bar */}
-        <header style={{
+        <header className="admin-topbar" style={{
           height: 56,
           background: 'var(--color-surface)',
           borderBottom: '1px solid var(--color-border)',
@@ -118,13 +137,13 @@ export default function Layout() {
             ☰
           </button>
           <div style={{ flex: 1 }} />
-          <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
+          <div className="admin-header-date" style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
             {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </div>
         </header>
 
         {/* Page content */}
-        <main style={{ flex: 1, overflow: 'auto', padding: 24 }}>
+        <main className="admin-content" style={{ flex: 1, overflow: 'auto', padding: 24 }}>
           <Outlet />
         </main>
       </div>

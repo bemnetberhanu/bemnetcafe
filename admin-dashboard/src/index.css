@@ -25,6 +25,8 @@ body {
   line-height: 1.5;
 }
 
+html, body, #root { min-height: 100%; }
+
 h1, h2, h3, h4 { font-weight: 600; }
 
 a { color: inherit; text-decoration: none; }
@@ -34,6 +36,84 @@ button { cursor: pointer; font-family: inherit; }
 input, select, textarea {
   font-family: inherit;
   font-size: inherit;
+}
+
+.admin-main, .admin-content { min-width: 0; }
+
+.admin-sidebar-backdrop { display: none; }
+
+.dashboard-main-grid { min-width: 0; }
+.dashboard-panel { min-width: 0; }
+
+@media (max-width: 980px) {
+  .dashboard-main-grid { grid-template-columns: 1fr !important; }
+}
+
+@media (max-width: 760px) {
+  .admin-layout { min-height: 100dvh !important; }
+
+  .admin-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 20;
+    width: 240px !important;
+    height: 100dvh;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+  }
+
+  .admin-sidebar.is-open { transform: translateX(0); }
+
+  .admin-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 19;
+    border: 0;
+    background: rgba(0, 0, 0, 0.38);
+  }
+
+  .admin-main { width: 100%; }
+  .admin-header-date { display: none; }
+  .admin-content { padding: 16px !important; }
+
+  .admin-topbar { padding-inline: 12px !important; }
+  .admin-page-header {
+    align-items: flex-start !important;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .admin-page-header > div:first-child { flex: 1 1 100%; min-width: 0; }
+  .admin-page-header h1 { font-size: 20px !important; overflow-wrap: anywhere; }
+  .admin-page-header > button { max-width: 100%; }
+
+  .admin-table-scroll { max-width: 100%; overflow-x: auto !important; }
+  .admin-table-scroll table { min-width: 680px; }
+  .admin-form-grid { grid-template-columns: minmax(0, 1fr) !important; }
+  .menu-items-grid, .users-grid { grid-template-columns: minmax(0, 1fr) !important; }
+  .ranking-columns { grid-template-columns: minmax(0, 1fr) !important; }
+
+  .admin-filter-controls { width: 100%; flex-wrap: wrap; }
+  .admin-filter-controls button { flex: 1 1 140px; }
+  .orders-date { width: 100%; justify-content: flex-start; }
+  .orders-summary { flex-wrap: wrap; }
+  .orders-summary > div { flex: 1 1 130px; }
+  .order-row { flex-wrap: wrap; gap: 8px !important; padding: 12px !important; }
+  .order-row > div:nth-child(2) { flex: 1 1 100% !important; order: 3; }
+  .order-row > div:nth-child(4) { margin-left: auto; }
+  .order-detail-row { gap: 8px !important; }
+
+  .new-ingredient-main { flex-wrap: wrap; }
+  .new-ingredient-main > * { flex: 1 1 100% !important; min-width: 0; }
+  .new-ingredient-fields { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+
+  .admin-modal-overlay {
+    align-items: flex-start !important;
+    overflow-y: auto;
+    padding: 12px !important;
+  }
+  .admin-modal { max-height: calc(100dvh - 24px) !important; margin: auto 0; }
+  .admin-modal-heading, .admin-modal-body { padding: 16px !important; }
 }
 
 /* Scrollbar */

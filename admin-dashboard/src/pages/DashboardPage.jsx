@@ -89,9 +89,9 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20 }}>
+      <div className="dashboard-main-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20 }}>
         {/* Revenue vs Profit chart */}
-        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', padding: 24, boxShadow: 'var(--shadow)' }}>
+        <div className="dashboard-panel" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', padding: 24, boxShadow: 'var(--shadow)' }}>
           <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>Revenue vs Profit — This Month</h3>
           {chartData.length > 0 ? (
             <ResponsiveContainer width="100%" height={260}>
@@ -113,7 +113,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Low stock panel */}
-        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', padding: 24, boxShadow: 'var(--shadow)' }}>
+        <div className="dashboard-panel" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', padding: 24, boxShadow: 'var(--shadow)' }}>
           <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>
             ⚠️ Low Stock Alerts {lowStock.length > 0 && <span style={{ background: 'var(--color-danger)', color: '#fff', borderRadius: 12, padding: '2px 8px', fontSize: 12, marginLeft: 8 }}>{lowStock.length}</span>}
           </h3>

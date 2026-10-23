@@ -9,6 +9,7 @@ export default function Modal({ title, onClose, children, width = 560 }) {
 
   return (
     <div
+      className="admin-modal-overlay"
       style={{
         position: 'fixed', inset: 0, zIndex: 1000,
         background: 'rgba(0,0,0,0.45)',
@@ -17,7 +18,7 @@ export default function Modal({ title, onClose, children, width = 560 }) {
       }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div style={{
+      <div className="admin-modal" style={{
         background: 'var(--color-surface)',
         borderRadius: 12,
         boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
@@ -27,7 +28,7 @@ export default function Modal({ title, onClose, children, width = 560 }) {
         display: 'flex',
         flexDirection: 'column',
       }}>
-        <div style={{
+        <div className="admin-modal-heading" style={{
           padding: '16px 24px',
           borderBottom: '1px solid var(--color-border)',
           display: 'flex',
@@ -43,7 +44,7 @@ export default function Modal({ title, onClose, children, width = 560 }) {
             ×
           </button>
         </div>
-        <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
+        <div className="admin-modal-body" style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
           {children}
         </div>
       </div>
