@@ -229,7 +229,7 @@ Copy-Item .env.example .env
 npx expo start
 ```
 
-Install Expo Go on an Android or iOS phone connected to the same Wi-Fi network, then scan the QR code shown by Expo. The app uses the hosted API by default; `EXPO_PUBLIC_API_URL` in the local, Git-ignored `.env` can override it. Keep `.env` private.
+Install an Expo Go build that supports SDK 57 on your phone, then scan the QR code shown by Expo. For a physical iPhone, Expo currently distributes SDK 57 Expo Go through `eas go` and TestFlight, which requires Apple Developer Program membership; the App Store build may not support SDK 57. The app uses the hosted API by default; `EXPO_PUBLIC_API_URL` in the local, Git-ignored `.env` can override it. Keep `.env` private.
 
 To verify the Android JavaScript bundle without a device or emulator, run `npx expo export --platform android`. An installable Android build additionally requires Android Studio/SDK and a compatible Java version.
 
