@@ -140,7 +140,13 @@ async function removeItem(req, res) {
     if (result.affectedRows === 0) return res.status(404).json({ error: 'Menu item not found.' });
     res.json({ message: 'Menu item deleted.' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    if (err.code === 'ER_ROW_IS_REFERENCED_2') {
+      return res.status(409).json({
+        error: 'This menu item is used in past orders and cannot be deleted without changing sales history. Mark it unavailable instead.',
+      });
+    }
+    console.error('Delete menu item error:', err);
+    res.status(500).json({ error: 'Failed to delete menu item.' });
   }
 }
 

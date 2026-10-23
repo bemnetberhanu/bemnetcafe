@@ -382,14 +382,36 @@ export default function MenuPage() {
     }
   }
 
-  async function handleDelete(id) {
+  async function handleDelete(item) {
     if (!confirm('Delete this menu item?')) return;
     try {
-      await api.delete(`/menu/${id}`);
+      await api.delete(`/menu/${item.id}`);
       toast.success('Item deleted.');
       fetchData();
     } catch (err) {
-      toast.error('Failed to delete.');
+      const errorMessage = err.response?.data?.error || '';
+      const isOrderHistoryConflict =
+        err.response?.status === 409 ||
+        err.response?.data?.code === 'ER_ROW_IS_REFERENCED_2' ||
+        /foreign key|referenced row/i.test(errorMessage);
+
+      if (isOrderHistoryConflict) {
+        const shouldDisable = confirm(
+          `"${item.name}" is used in past orders and cannot be permanently deleted without changing sales history. Mark it unavailable instead?`
+        );
+        if (!shouldDisable) return;
+
+        try {
+          await api.put(`/menu/${item.id}`, { ...item, is_available: false });
+          toast.success(`"${item.name}" is now unavailable for new orders.`);
+          fetchData();
+        } catch (updateError) {
+          toast.error(updateError.response?.data?.error || 'Failed to mark the item unavailable.');
+        }
+        return;
+      }
+
+      toast.error(err.response?.data?.error || 'Failed to delete.');
     }
   }
 
@@ -467,7 +489,7 @@ export default function MenuPage() {
                       <button onClick={() => toggleAvailability(item)} style={{ padding: '5px 12px', background: item.is_available ? '#fef3c7' : '#dcfce7', border: '1px solid ' + (item.is_available ? '#fde68a' : '#86efac'), borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>
                         {item.is_available ? 'Disable' : 'Enable'}
                       </button>
-                      <button onClick={() => handleDelete(item.id)} style={{ padding: '5px 12px', background: '#fee2e2', border: '1px solid #fecaca', color: 'var(--color-danger)', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>Delete</button>
+                      <button onClick={() => handleDelete(item)} style={{ padding: '5px 12px', background: '#fee2e2', border: '1px solid #fecaca', color: 'var(--color-danger)', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>Delete</button>
                     </div>
                   </div>
                 </div>
