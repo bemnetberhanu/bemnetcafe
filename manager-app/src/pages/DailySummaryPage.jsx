@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/client';
+import { itemLabel } from '../amharic';
 
 export default function DailySummaryPage() {
   const [summary, setSummary] = useState(null);
@@ -18,7 +19,7 @@ export default function DailySummaryPage() {
   return (
     <div className="page-content">
       <div className="summary-heading" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h2 style={{ fontSize: 17, fontWeight: 700 }}>Daily Summary</h2>
+        <h2 style={{ fontSize: 17, fontWeight: 700 }}>የዕለቱ ማጠቃለያ</h2>
         <input
           type="date"
           value={date}
@@ -28,18 +29,18 @@ export default function DailySummaryPage() {
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', paddingTop: 40, color: 'var(--muted)' }}>Loading...</div>
+        <div style={{ textAlign: 'center', paddingTop: 40, color: 'var(--muted)' }}>በመጫን ላይ...</div>
       ) : summary && (
         <>
           <div className="summary-cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12, marginBottom: 16 }}>
-            <SumCard icon="🧾" label="Total Orders" value={summary.order_count} color="#2563eb" />
-            <SumCard icon="💰" label="Total Revenue" value={`$${summary.total_revenue.toFixed(2)}`} color="var(--success)" />
-            <SumCard icon="🥩" label="Cost of Goods Sold" value={`$${Number(summary.cogs || 0).toFixed(2)}`} color="#d97706" />
-            <SumCard icon="🏢" label="Operating Expenses" value={`$${Number(summary.operating_costs || 0).toFixed(2)}`} color="#7c3aed" />
-            <SumCard icon="📦" label="Purchases (separate)" value={`$${Number(summary.purchase_costs || 0).toFixed(2)}`} color="#2563eb" />
+            <SumCard icon="🧾" label="ጠቅላላ ትዕዛዞች" value={summary.order_count} color="#2563eb" />
+            <SumCard icon="💰" label="ጠቅላላ ገቢ" value={`$${summary.total_revenue.toFixed(2)}`} color="var(--success)" />
+            <SumCard icon="🥩" label="የተሸጡ ዕቃዎች ወጪ" value={`$${Number(summary.cogs || 0).toFixed(2)}`} color="#d97706" />
+            <SumCard icon="🏢" label="የሥራ ማስኬጃ ወጪዎች" value={`$${Number(summary.operating_costs || 0).toFixed(2)}`} color="#7c3aed" />
+            <SumCard icon="📦" label="ግዥዎች (ተለይተው የቀረቡ)" value={`$${Number(summary.purchase_costs || 0).toFixed(2)}`} color="#2563eb" />
             <SumCard
               icon={netProfit >= 0 ? '✅' : '❌'}
-              label={netProfit >= 0 ? 'Net Profit' : 'Net Loss'}
+              label={netProfit >= 0 ? 'የተጣራ ትርፍ' : 'የተጣራ ኪሳራ'}
               value={`$${netProfit.toFixed(2)}`}
               color={netProfit >= 0 ? 'var(--success)' : 'var(--danger)'}
             />
@@ -47,12 +48,12 @@ export default function DailySummaryPage() {
             <SumCard icon="💳" label="Card Sales" value={`$${summary.card_revenue.toFixed(2)}`} color="#7c3aed" />
           </div>
           <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 16 }}>
-            Net profit = revenue − cost of goods sold − operating expenses. Purchases are shown separately and are not deducted twice.
+            የተጣራ ትርፍ = ገቢ - የተሸጡ ዕቃዎች ወጪ - የሥራ ማስኬጃ ወጪዎች። ግዥዎች ሁለት ጊዜ እንዳይቀነሱ በተለይ ቀርበዋል።
           </p>
 
           {summary.top_items_today?.length > 0 && (
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
-              <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>🏆 Today's Top Items</h3>
+              <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>🏆 የዛሬ የተሸጡ ዋና ዕቃዎች</h3>
               {summary.top_items_today.map((item, i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: i < summary.top_items_today.length - 1 ? '1px solid var(--border)' : 'none' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -64,9 +65,9 @@ export default function DailySummaryPage() {
                     }}>
                       {i + 1}
                     </div>
-                    <span style={{ fontSize: 14, fontWeight: 500 }}>{item.item}</span>
+                    <span style={{ fontSize: 14, fontWeight: 500 }}>{itemLabel(item.item)}</span>
                   </div>
-                  <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--primary)' }}>{item.qty_sold} sold</span>
+                  <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--primary)' }}>{item.qty_sold} ተሸጧል</span>
                 </div>
               ))}
             </div>
@@ -75,8 +76,8 @@ export default function DailySummaryPage() {
           {summary.order_count === 0 && (
             <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--muted)' }}>
               <div style={{ fontSize: 36, marginBottom: 10 }}>📭</div>
-              <div style={{ fontSize: 15, fontWeight: 600 }}>No orders on {date}</div>
-              <div style={{ fontSize: 13, marginTop: 4 }}>Use the POS screen to add orders.</div>
+              <div style={{ fontSize: 15, fontWeight: 600 }}>በ{date} ምንም ትዕዛዝ የለም</div>
+              <div style={{ fontSize: 13, marginTop: 4 }}>ትዕዛዝ ለመጨመር የሽያጭ ገጹን ይጠቀሙ።</div>
             </div>
           )}
         </>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import api from '../api/client';
+import { itemLabel, notificationMessage, unitLabel } from '../amharic';
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState([]);
@@ -18,7 +19,7 @@ export default function NotificationsPage() {
       setUnreadCount(notifRes.data.unread_count);
       setLowStock(stockRes.data.filter(i => i.is_low_stock));
     } catch (err) {
-      toast.error('Failed to load notifications.');
+      toast.error('ማሳወቂያዎችን መጫን አልተሳካም።');
     } finally {
       setLoading(false);
     }
@@ -31,7 +32,7 @@ export default function NotificationsPage() {
       await api.patch('/notifications/all/read');
       setUnreadCount(0);
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-      toast.success('All notifications marked as read.');
+      toast.success('ሁሉም ማሳወቂያዎች እንደተነበቡ ተመልክተዋል።');
     } catch {}
   }
 
@@ -43,14 +44,14 @@ export default function NotificationsPage() {
     } catch {}
   }
 
-  if (loading) return <div className="page-content" style={{ textAlign: 'center', color: 'var(--muted)', paddingTop: 40 }}>Loading...</div>;
+  if (loading) return <div className="page-content" style={{ textAlign: 'center', color: 'var(--muted)', paddingTop: 40 }}>በመጫን ላይ...</div>;
 
   return (
     <div className="page-content">
       {/* Low stock inventory hub */}
       <div style={{ marginBottom: 20 }}>
         <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 10 }}>
-          🔴 Low Stock Inventory
+          🔴 አነስተኛ ክምችት
           {lowStock.length > 0 && (
             <span style={{ marginLeft: 8, background: 'var(--danger)', color: '#fff', borderRadius: 12, padding: '2px 8px', fontSize: 12 }}>
               {lowStock.length}
@@ -59,21 +60,21 @@ export default function NotificationsPage() {
         </h2>
         {lowStock.length === 0 ? (
           <div style={{ padding: '16px', background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 10, fontSize: 13, color: 'var(--success)', fontWeight: 600 }}>
-            ✅ All ingredients are sufficiently stocked!
+            ✅ ሁሉም ጥሬ ዕቃዎች በቂ ክምችት አላቸው!
           </div>
         ) : (
           lowStock.map(item => (
             <div key={item.id} style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: '12px 14px', marginBottom: 8 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--danger)' }}>⚠️ {item.name}</div>
-                <span style={{ fontSize: 11, background: '#fee2e2', color: 'var(--danger)', padding: '2px 8px', borderRadius: 20, fontWeight: 600 }}>LOW</span>
+                <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--danger)' }}>⚠️ {itemLabel(item.name)}</div>
+                <span style={{ fontSize: 11, background: '#fee2e2', color: 'var(--danger)', padding: '2px 8px', borderRadius: 20, fontWeight: 600 }}>አነስተኛ</span>
               </div>
               <div style={{ fontSize: 13, color: '#7f1d1d', marginTop: 4 }}>
-                Current: <strong>{parseFloat(item.current_quantity)} {item.unit_of_measure}</strong>
-                · Reorder at: {parseFloat(item.reorder_level)} {item.unit_of_measure}
+                በአሁኑ ጊዜ: <strong>{parseFloat(item.current_quantity)} {unitLabel(item.unit_of_measure)}</strong>
+                · እንደገና የማዘዣ መጠን: {parseFloat(item.reorder_level)} {unitLabel(item.unit_of_measure)}
               </div>
               <div style={{ fontSize: 13, color: '#7f1d1d', marginTop: 2 }}>
-                Please buy: <strong>{parseFloat(item.reorder_quantity)} {item.unit_of_measure}</strong>
+                እባክዎን ይግዙ: <strong>{parseFloat(item.reorder_quantity)} {unitLabel(item.unit_of_measure)}</strong>
               </div>
             </div>
           ))
@@ -84,10 +85,10 @@ export default function NotificationsPage() {
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <h2 style={{ fontSize: 16, fontWeight: 700 }}>
-            🔔 Notification Log
+            🔔 የማሳወቂያዎች መዝገብ
             {unreadCount > 0 && (
               <span style={{ marginLeft: 8, background: 'var(--danger)', color: '#fff', borderRadius: 12, padding: '2px 8px', fontSize: 12 }}>
-                {unreadCount} unread
+                {unreadCount} ያልተነበቡ
               </span>
             )}
           </h2>
@@ -96,14 +97,14 @@ export default function NotificationsPage() {
               onClick={markAllRead}
               style={{ padding: '6px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 7, fontSize: 12, cursor: 'pointer' }}
             >
-              Mark all read
+              ሁሉንም እንደተነበቡ ምልክት አድርግ
             </button>
           )}
         </div>
 
         {notifications.length === 0 ? (
           <div style={{ padding: '20px', textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
-            No notifications yet.
+            እስካሁን ምንም ማሳወቂያዎች የሉም።
           </div>
         ) : (
           notifications.map(n => (
@@ -119,14 +120,14 @@ export default function NotificationsPage() {
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                 <div style={{ fontSize: 13, color: n.is_read ? 'var(--text)' : '#92400e', flex: 1 }}>
-                  {n.message}
+                  {notificationMessage(n)}
                 </div>
                 {!n.is_read && (
                   <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--warning)', flexShrink: 0, marginTop: 4 }} />
                 )}
               </div>
               <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>
-                {new Date(n.created_at).toLocaleString()}
+                {new Date(n.created_at).toLocaleString('am-ET')}
               </div>
             </div>
           ))

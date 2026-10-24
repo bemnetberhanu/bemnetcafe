@@ -3,11 +3,11 @@ import { NavLink } from 'react-router-dom';
 import api from '../api/client';
 
 const navItems = [
-  { to: '/', icon: '🍽️', label: 'POS', exact: true },
-  { to: '/purchases', icon: '📦', label: 'Purchase' },
-  { to: '/expenses', icon: '🧾', label: 'Expense' },
-  { to: '/notifications', icon: '🔔', label: 'Alerts', badge: true },
-  { to: '/summary', icon: '📊', label: 'Summary' },
+  { to: '/', icon: '🍽️', label: 'የሽያጭ ቦታ', exact: true },
+  { to: '/purchases', icon: '📦', label: 'ግዥ' },
+  { to: '/expenses', icon: '🧾', label: 'ወጪ' },
+  { to: '/notifications', icon: '🔔', label: 'ማሳወቂያ', badge: true },
+  { to: '/summary', icon: '📊', label: 'ማጠቃለያ' },
 ];
 
 export default function BottomNav() {

@@ -16,13 +16,16 @@ export default function LoginPage() {
     try {
       const response = await api.post('/auth/login', { email, password });
       if (!['manager', 'admin'].includes(response.data.user.role)) {
-        toast.error('Manager access only.');
+        toast.error('የአስተዳዳሪ መዳረሻ ብቻ።');
         return;
       }
       setAuth(response.data.token, response.data.user);
       navigate('/', { replace: true });
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Login failed.');
+      const serverError = error.response?.data?.error;
+      toast.error(serverError === 'Invalid email or password.'
+        ? 'ኢሜይሉ ወይም የይለፍ ቃሉ ትክክል አይደለም።'
+        : serverError || 'መግባት አልተሳካም።');
     } finally {
       setLoading(false);
     }
@@ -48,12 +51,12 @@ export default function LoginPage() {
         <header style={{ textAlign: 'center', marginBottom: 28 }}>
           <div style={{ fontSize: 44, marginBottom: 10 }}>🇪🇹</div>
           <h1 style={{ fontSize: 22, color: '#1c1410' }}>Habesha Restaurant</h1>
-          <p style={{ color: '#6b7280', fontSize: 14, marginTop: 4 }}>Manager Sign In</p>
+          <p style={{ color: '#6b7280', fontSize: 14, marginTop: 4 }}>የአስተዳዳሪ መግቢያ</p>
         </header>
 
         <form onSubmit={handleSubmit}>
           <label style={{ display: 'block', marginBottom: 16, fontSize: 13, fontWeight: 500 }}>
-            Email
+            ኢሜይል
             <input
               type="email"
               autoComplete="username"
@@ -68,7 +71,7 @@ export default function LoginPage() {
           </label>
 
           <label style={{ display: 'block', marginBottom: 24, fontSize: 13, fontWeight: 500 }}>
-            Password
+            የይለፍ ቃል
             <input
               type="password"
               autoComplete="current-password"
@@ -91,7 +94,7 @@ export default function LoginPage() {
               fontSize: 15, fontWeight: 600, cursor: loading ? 'wait' : 'pointer',
             }}
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'በመግባት ላይ...' : 'ግባ'}
           </button>
         </form>
       </section>

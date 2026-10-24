@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import api from '../api/client';
+import { categoryLabel, itemLabel, unitLabel, variationLabel } from '../amharic';
 
 export default function POSPage() {
   const [menuItems, setMenuItems] = useState([]);
@@ -14,7 +15,7 @@ export default function POSPage() {
   useEffect(() => {
     api.get('/menu').then(res => {
       setMenuItems(res.data.filter(i => i.is_available));
-    }).catch(() => toast.error('Failed to load menu.')).finally(() => setLoading(false));
+    }).catch(() => toast.error('ምናሌውን መጫን አልተሳካም።')).finally(() => setLoading(false));
   }, []);
 
   const categories = ['All', ...new Set(menuItems.map(i => i.category))];
@@ -50,7 +51,7 @@ export default function POSPage() {
   const cartTotal = cart.reduce((s, c) => s + c.unit_price * c.quantity, 0);
 
   async function placeOrder() {
-    if (cart.length === 0) return toast.error('Cart is empty.');
+    if (cart.length === 0) return toast.error('ትዕዛዙ ባዶ ነው።');
     setSubmitting(true);
     setShortage(null);
     try {
@@ -58,21 +59,21 @@ export default function POSPage() {
         items: cart.map(c => ({ recipe_item_id: c.recipe_item_id, variation_id: c.variation_id, quantity: c.quantity })),
         payment_method: paymentMethod,
       });
-      toast.success('✅ Order placed successfully!');
+      toast.success('✅ ትዕዛዙ በተሳካ ሁኔታ ተፈጽሟል!');
       setCart([]);
     } catch (err) {
       if (err.response?.data?.shortages) {
         setShortage(err.response.data.shortages);
-        toast.error('⚠️ Insufficient stock — see details below.');
+        toast.error('⚠️ በቂ ክምችት የለም — ዝርዝሩን ከታች ይመልከቱ።');
       } else {
-        toast.error(err.response?.data?.error || 'Failed to place order.');
+        toast.error(err.response?.data?.error || 'ትዕዛዙን መፈጸም አልተሳካም።');
       }
     } finally {
       setSubmitting(false);
     }
   }
 
-  if (loading) return <div className="page-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>Loading menu...</div>;
+  if (loading) return <div className="page-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>ምናሌው በመጫን ላይ...</div>;
 
   return (
     <div className="pos-screen" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -89,7 +90,7 @@ export default function POSPage() {
               cursor: 'pointer',
             }}
           >
-            {cat}
+            {categoryLabel(cat)}
           </button>
         ))}
       </div>
@@ -99,10 +100,10 @@ export default function POSPage() {
         <div className="pos-menu" style={{ flex: 1, overflowY: 'auto', padding: 12 }}>
           {shortage && (
             <div style={{ marginBottom: 12, padding: 12, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10 }}>
-              <div style={{ fontWeight: 700, color: 'var(--danger)', marginBottom: 6, fontSize: 13 }}>⚠️ Insufficient Stock:</div>
+              <div style={{ fontWeight: 700, color: 'var(--danger)', marginBottom: 6, fontSize: 13 }}>⚠️ በቂ ክምችት የለም:</div>
               {shortage.map((s, i) => (
                 <div key={i} style={{ fontSize: 12, color: '#7f1d1d' }}>
-                  • {s.ingredient_name}: need {s.required} {s.unit}, only {s.available} available
+                  • {itemLabel(s.ingredient_name)}: {s.required} {unitLabel(s.unit)} ያስፈልጋል፤ {s.available} ብቻ አለ
                 </div>
               ))}
             </div>
@@ -117,20 +118,20 @@ export default function POSPage() {
         {/* Cart sidebar */}
         <div className="pos-cart" style={{ width: 240, background: 'var(--surface)', borderLeft: '1px solid var(--border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div className="pos-cart-heading" style={{ padding: '12px 14px', borderBottom: '1px solid var(--border)', fontWeight: 700, fontSize: 14 }}>
-            🛒 Order ({cart.length} item{cart.length !== 1 ? 's' : ''})
+            🛒 ትዕዛዝ ({cart.length} ዕቃዎች)
           </div>
 
           <div className="pos-cart-items" style={{ flex: 1, overflowY: 'auto', padding: '8px 10px' }}>
             {cart.length === 0 ? (
               <div style={{ padding: '24px 12px', textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
-                Tap menu items to add them here
+                ለማከል የምግብ ዓይነቶችን ይጫኑ
               </div>
             ) : (
               cart.map(item => (
                 <div key={item.key} style={{ marginBottom: 8, padding: '8px 10px', background: 'var(--bg)', borderRadius: 8, border: '1px solid var(--border)' }}>
                   <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 4 }}>
-                    {item.name}
-                    {item.variation_name && <span style={{ color: 'var(--muted)', fontWeight: 400 }}> ({item.variation_name})</span>}
+                    {itemLabel(item.name)}
+                    {item.variation_name && <span style={{ color: 'var(--muted)', fontWeight: 400 }}> ({variationLabel(item.variation_name)})</span>}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -150,7 +151,7 @@ export default function POSPage() {
 
           <div className="pos-cart-footer" style={{ padding: '12px 14px', borderTop: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10, fontSize: 16, fontWeight: 700 }}>
-              <span>Total</span>
+              <span>ጠቅላላ</span>
               <span style={{ color: 'var(--primary)' }}>${cartTotal.toFixed(2)}</span>
             </div>
             <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
@@ -165,7 +166,7 @@ export default function POSPage() {
                     border: 'none', cursor: 'pointer', textTransform: 'capitalize',
                   }}
                 >
-                  {m === 'cash' ? '💵' : '💳'} {m}
+                  {m === 'cash' ? '💵 በጥሬ ገንዘብ' : '💳 በካርድ'}
                 </button>
               ))}
             </div>
@@ -178,7 +179,7 @@ export default function POSPage() {
                 cursor: cart.length === 0 || submitting ? 'not-allowed' : 'pointer',
               }}
             >
-              {submitting ? 'Placing...' : '✅ Place Order'}
+              {submitting ? 'በመፈጸም ላይ...' : '✅ ትዕዛዝ ፈጽም'}
             </button>
           </div>
         </div>
@@ -209,14 +210,14 @@ function MenuCard({ item, onAdd }) {
           boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
         }}
       >
-        <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>{item.name}</div>
-        <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>{item.category}</div>
+        <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>{itemLabel(item.name)}</div>
+        <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>{categoryLabel(item.category)}</div>
         <div style={{ fontWeight: 700, color: 'var(--primary)', fontSize: 15 }}>
           ${parseFloat(item.selling_price).toFixed(2)}
         </div>
         {item.variations?.length > 0 && (
           <div style={{ fontSize: 11, color: 'var(--info)', marginTop: 4 }}>
-            {item.variations.length} variation(s) ▾
+            {item.variations.length} አማራጮች ▾
           </div>
         )}
       </button>
@@ -233,7 +234,7 @@ function MenuCard({ item, onAdd }) {
                 border: '1px solid var(--border)', borderRadius: 7, fontSize: 12, cursor: 'pointer',
               }}
             >
-              {v.name} · <span style={{ color: 'var(--primary)', fontWeight: 600 }}>
+              {variationLabel(v.name)} · <span style={{ color: 'var(--primary)', fontWeight: 600 }}>
                 ${(parseFloat(item.selling_price) + parseFloat(v.price_adjustment)).toFixed(2)}
               </span>
             </button>
@@ -242,7 +243,7 @@ function MenuCard({ item, onAdd }) {
             onClick={() => { onAdd(item); setShowVariations(false); }}
             style={{ display: 'block', width: '100%', textAlign: 'left', padding: '7px 10px', background: '#fff', border: '1px solid var(--border)', borderRadius: 7, fontSize: 12, cursor: 'pointer' }}
           >
-            Regular · <span style={{ color: 'var(--primary)', fontWeight: 600 }}>${parseFloat(item.selling_price).toFixed(2)}</span>
+            መደበኛ · <span style={{ color: 'var(--primary)', fontWeight: 600 }}>${parseFloat(item.selling_price).toFixed(2)}</span>
           </button>
         </div>
       )}

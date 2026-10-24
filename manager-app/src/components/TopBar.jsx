@@ -3,11 +3,11 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { clearAuth } from '../auth';
 
 const PAGE_TITLES = {
-  '/': '🍽️ New Order',
-  '/purchases': '📦 Record Purchase',
-  '/expenses': '🧾 Add Expense',
-  '/notifications': '🔔 Alerts & Stock',
-  '/summary': '📊 Daily Summary',
+  '/': '🍽️ አዲስ ትዕዛዝ',
+  '/purchases': '📦 ግዥ መዝግብ',
+  '/expenses': '🧾 ወጪ ጨምር',
+  '/notifications': '🔔 ማሳወቂያ እና ክምችት',
+  '/summary': '📊 የዕለቱ ማጠቃለያ',
 };
 
 export default function TopBar() {
@@ -35,11 +35,11 @@ export default function TopBar() {
       <div className="manager-brand" style={{ flex: 1 }}>
         <div style={{ fontWeight: 700, fontSize: 15 }}>Habesha Restaurant</div>
         <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
-          {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+          {new Date().toLocaleDateString('am-ET', { weekday: 'short', month: 'short', day: 'numeric' })}
         </div>
       </div>
       <div className="manager-page-title" style={{ fontSize: 14, fontWeight: 600, color: '#f5c97a' }}>
-        {PAGE_TITLES[pathname] || 'Manager App'}
+        {PAGE_TITLES[pathname] || 'የአስተዳዳሪ መተግበሪያ'}
       </div>
       <button
         className="manager-signout"
@@ -54,7 +54,7 @@ export default function TopBar() {
           fontSize: 12,
         }}
       >
-        Sign out
+        ውጣ
       </button>
     </header>
   );
