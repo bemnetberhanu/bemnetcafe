@@ -1,4 +1,5 @@
 const pool = require('../database/db');
+const { findReceipt, saveReceipt } = require('../services/offlineSyncService');
 
 async function getAll(req, res) {
   const { start_date, end_date, category } = req.query;
@@ -33,16 +34,49 @@ async function getAll(req, res) {
 }
 
 async function create(req, res) {
-  const { expense_date, category, amount, description } = req.body;
+  const { expense_date, category, amount, description, client_operation_id: operationId } = req.body;
+  let conn;
+  let transactionStarted = false;
   try {
-    const [result] = await pool.query(
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
+    transactionStarted = true;
+    if (operationId) {
+      const receipt = await findReceipt(conn, operationId, req.user.id);
+      if (receipt) {
+        await conn.commit();
+        transactionStarted = false;
+        if (receipt.operation_type !== 'expense') {
+          return res.status(409).json({ error: 'This operation ID was already used for a different record.' });
+        }
+        const [rows] = await pool.query('SELECT * FROM operating_expenses WHERE id = ?', [receipt.result_id]);
+        return res.status(200).json(rows[0]);
+      }
+    }
+
+    const [result] = await conn.query(
       'INSERT INTO operating_expenses (expense_date, category, amount, description, created_by) VALUES (?, ?, ?, ?, ?)',
       [expense_date || new Date().toISOString().split('T')[0], category, amount, description || null, req.user.id || null]
     );
+    if (operationId) {
+      await saveReceipt(conn, operationId, 'expense', result.insertId, req.user.id);
+    }
+    await conn.commit();
+    transactionStarted = false;
     const [rows] = await pool.query('SELECT * FROM operating_expenses WHERE id = ?', [result.insertId]);
     res.status(201).json(rows[0]);
   } catch (err) {
+    if (transactionStarted) await conn.rollback();
+    if (operationId && err.code === 'ER_DUP_ENTRY') {
+      const receipt = await findReceipt(pool, operationId, req.user.id);
+      if (receipt?.operation_type === 'expense') {
+        const [rows] = await pool.query('SELECT * FROM operating_expenses WHERE id = ?', [receipt.result_id]);
+        return res.status(200).json(rows[0]);
+      }
+    }
     res.status(500).json({ error: err.message });
+  } finally {
+    if (conn) conn.release();
   }
 }
 

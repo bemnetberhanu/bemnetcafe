@@ -8,6 +8,9 @@ import { expensesApi } from '../../src/api/client';
 import { colors, spacing, radius, shadow, typography } from '../../src/theme';
 import Button from '../../src/components/Button';
 import Input from '../../src/components/Input';
+import useAuthStore from '../../src/store/authStore';
+import { cacheData, getCachedData } from '../../src/offline/database';
+import { recordManagerOperation } from '../../src/offline/sync';
 
 const CATEGORIES = [
   'Rent', 'Electricity', 'Water', 'Gas', 'Staff Salary',
@@ -16,6 +19,7 @@ const CATEGORIES = [
 
 export default function ExpensesScreen() {
   const insets = useSafeAreaInsets();
+  const userId = useAuthStore((state) => state.user?.id);
   const [recentExpenses, setRecentExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -25,11 +29,30 @@ export default function ExpensesScreen() {
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
 
-  const loadExpenses = () => {
-    expensesApi.getAll()
-      .then(res => setRecentExpenses(res.data.slice(0, 10)))
-      .catch(() => {})
-      .finally(() => setLoading(false));
+  const loadExpenses = async () => {
+    try {
+      const res = await expensesApi.getAll();
+      const recent = res.data.slice(0, 10);
+      setRecentExpenses(recent);
+      try {
+        await cacheData('manager-expenses', recent);
+      } catch (error) {
+        console.error('Could not cache recent expenses:', error);
+      }
+    } catch (error) {
+      try {
+        const cached = await getCachedData('manager-expenses');
+        if (Array.isArray(cached)) {
+          setRecentExpenses(cached);
+        } else if (error.response) {
+          Alert.alert('Error', error.response.data?.error || 'Failed to load expenses.');
+        }
+      } catch (cacheError) {
+        Alert.alert('Error', `Could not load saved expenses: ${cacheError.message}`);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { loadExpenses(); }, []);
@@ -41,8 +64,16 @@ export default function ExpensesScreen() {
     }
     setSubmitting(true);
     try {
-      await expensesApi.create({ expense_date: date, amount: parseFloat(amount), category, description });
-      Alert.alert('✅ Expense Recorded');
+      const result = await recordManagerOperation('expense', {
+        expense_date: date,
+        amount: parseFloat(amount),
+        category,
+        description,
+      }, userId);
+      Alert.alert(
+        result.queued ? 'Expense Saved Offline' : '✅ Expense Recorded',
+        result.queued ? 'The expense is saved on this device and will sync when internet returns.' : undefined
+      );
       setAmount('');
       setCategory('');
       setDescription('');

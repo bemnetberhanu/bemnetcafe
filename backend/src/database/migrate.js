@@ -143,6 +143,15 @@ const migrations = [
     FOREIGN KEY (ingredient_id) REFERENCES ingredients(id) ON DELETE SET NULL
   ) ENGINE=InnoDB`,
 
+  `CREATE TABLE IF NOT EXISTS offline_sync_receipts (
+    operation_id VARCHAR(100) PRIMARY KEY,
+    operation_type ENUM('order', 'purchase', 'expense') NOT NULL,
+    result_id INT NOT NULL,
+    user_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_offline_sync_user (user_id, created_at)
+  ) ENGINE=InnoDB`,
+
   // ─── Performance indexes for 5-year data retention ───────────────────────
   // These turn full-table scans into index seeks on the two highest-volume tables.
   // Duplicate index names are ignored by the migration loop below.

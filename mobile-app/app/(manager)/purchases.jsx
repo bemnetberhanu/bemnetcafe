@@ -8,11 +8,15 @@ import { ingredientsApi, purchasesApi } from '../../src/api/client';
 import { colors, spacing, radius, shadow, typography } from '../../src/theme';
 import Button from '../../src/components/Button';
 import Input from '../../src/components/Input';
+import useAuthStore from '../../src/store/authStore';
+import { cacheData, getCachedData } from '../../src/offline/database';
+import { recordManagerOperation } from '../../src/offline/sync';
 
 const EMPTY_ROW = () => ({ id: Date.now(), ingredient_id: null, ingredient_name: '', quantity_bought: '', cost_per_unit_at_time: '' });
 
 export default function PurchasesScreen() {
   const insets = useSafeAreaInsets();
+  const userId = useAuthStore((state) => state.user?.id);
   const [ingredients, setIngredients] = useState([]);
   const [recentPurchases, setRecentPurchases] = useState([]);
   const [rows, setRows] = useState([EMPTY_ROW()]);
@@ -22,13 +26,39 @@ export default function PurchasesScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [pickerRowId, setPickerRowId] = useState(null);
 
+  async function loadData() {
+    const [ingredientsResult, purchasesResult] = await Promise.allSettled([
+      ingredientsApi.getAll(),
+      purchasesApi.getAll(),
+    ]);
+
+    if (ingredientsResult.status === 'fulfilled' && Array.isArray(ingredientsResult.value.data)) {
+      setIngredients(ingredientsResult.value.data);
+      try {
+        await cacheData('manager-ingredients', ingredientsResult.value.data);
+      } catch (error) {
+        console.error('Could not cache ingredients for offline use:', error);
+      }
+    } else {
+      setIngredients((await getCachedData('manager-ingredients')) || []);
+    }
+
+    if (purchasesResult.status === 'fulfilled' && Array.isArray(purchasesResult.value.data)) {
+      const recent = purchasesResult.value.data.slice(0, 5);
+      setRecentPurchases(recent);
+      try {
+        await cacheData('manager-purchases', recent);
+      } catch (error) {
+        console.error('Could not cache recent purchases:', error);
+      }
+    } else {
+      setRecentPurchases((await getCachedData('manager-purchases')) || []);
+    }
+  }
+
   useEffect(() => {
-    Promise.all([ingredientsApi.getAll(), purchasesApi.getAll()])
-      .then(([iRes, pRes]) => {
-        setIngredients(iRes.data);
-        setRecentPurchases(pRes.data.slice(0, 5));
-      })
-      .catch(() => Alert.alert('Error', 'Failed to load data.'))
+    loadData()
+      .catch((error) => Alert.alert('Error', `Could not load saved purchase data: ${error.message}`))
       .finally(() => setLoading(false));
   }, []);
 
@@ -53,7 +83,7 @@ export default function PurchasesScreen() {
     }
     setSubmitting(true);
     try {
-      await purchasesApi.create({
+      const result = await recordManagerOperation('purchase', {
         supplier_name: supplierName,
         notes,
         items: validRows.map(r => ({
@@ -61,13 +91,19 @@ export default function PurchasesScreen() {
           quantity_bought: parseFloat(r.quantity_bought),
           cost_per_unit_at_time: parseFloat(r.cost_per_unit_at_time),
         })),
-      });
-      Alert.alert('✅ Purchase Recorded', 'Inventory has been updated.');
+      }, userId);
+      Alert.alert(
+        result.queued ? 'Purchase Saved Offline' : '✅ Purchase Recorded',
+        result.queued
+          ? 'The purchase is saved on this device and will update inventory when it syncs.'
+          : 'Inventory has been updated.'
+      );
       setRows([EMPTY_ROW()]);
       setSupplierName('');
       setNotes('');
-      purchasesApi.getAll().then(res => setRecentPurchases(res.data.slice(0, 5)));
-      ingredientsApi.getAll().then(res => setIngredients(res.data));
+      if (!result.queued) {
+        loadData().catch((error) => console.error('Could not refresh purchase data:', error));
+      }
     } catch (err) {
       Alert.alert('Error', err.response?.data?.error || 'Failed to record purchase.');
     } finally {

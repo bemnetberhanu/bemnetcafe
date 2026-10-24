@@ -233,6 +233,28 @@ Install an Expo Go build that supports SDK 57 on your phone, then scan the QR co
 
 To verify the Android JavaScript bundle without a device or emulator, run `npx expo export --platform android`. An installable Android build additionally requires Android Studio/SDK and a compatible Java version.
 
+### Build and update the manager Android app
+
+Build an installable APK with Expo Application Services (EAS):
+
+```powershell
+cd mobile-app
+npm ci
+npx eas-cli login
+npm run build:android:apk
+```
+
+The app caches menu and ingredient data locally and saves offline orders, purchases, and expenses in SQLite. Queued records sync when connectivity returns while the app is open, or the next time the app starts. Orders are checked against server stock during sync; rejected records remain on the device for manager review rather than being discarded. Resolve stock or validation conflicts before retrying.
+
+JavaScript and UI changes can be published to the preview build without reinstalling the APK:
+
+```powershell
+cd mobile-app
+npm run update:preview -- --message "Describe the update"
+```
+
+OTA updates require internet access and a matching app runtime. Native changes, including SQLite or permissions changes, require a newly built APK. Avoid publishing an update while the manager is recording offline work.
+
 ### Updates
 
 - Push code changes to GitHub `main`; Render and Cloudflare Pages build and deploy updates automatically.

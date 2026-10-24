@@ -3,9 +3,19 @@
     "name": "Habesha Restaurant",
     "slug": "habesha-restaurant",
     "version": "1.0.0",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/a4bd4e5a-77c5-4518-a773-589d9a6e4107",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    },
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.habesha.restaurant"
@@ -19,10 +29,20 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#1c1410"
+          "backgroundColor": "#1c1410",
+          "image": "./assets/splash.png",
+          "imageWidth": 180
         }
-      ]
+      ],
+      "expo-sqlite"
     ],
-    "scheme": "habesha"
+    "scheme": "habesha",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "a4bd4e5a-77c5-4518-a773-589d9a6e4107"
+      }
+    },
+    "owner": "bemnetber"
   }
 }

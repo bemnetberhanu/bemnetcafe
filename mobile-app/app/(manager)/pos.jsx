@@ -4,9 +4,12 @@ import {
   FlatList, ActivityIndicator, Modal, Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { menuApi, ordersApi } from '../../src/api/client';
+import { menuApi } from '../../src/api/client';
 import { colors, spacing, radius, shadow, typography } from '../../src/theme';
 import Button from '../../src/components/Button';
+import useAuthStore from '../../src/store/authStore';
+import { cacheData, getCachedData } from '../../src/offline/database';
+import { recordManagerOperation } from '../../src/offline/sync';
 
 // ─── Menu item card ────────────────────────────────────────────────────────────
 function MenuCard({ item, onAdd }) {
@@ -70,7 +73,9 @@ function MenuCard({ item, onAdd }) {
 // ─── Main POS screen ──────────────────────────────────────────────────────────
 export default function POSScreen() {
   const insets = useSafeAreaInsets();
+  const userId = useAuthStore((state) => state.user?.id);
   const [menuItems, setMenuItems] = useState([]);
+  const [menuError, setMenuError] = useState('');
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [cart, setCart] = useState([]);
@@ -80,10 +85,39 @@ export default function POSScreen() {
   const [cartVisible, setCartVisible] = useState(false);
 
   useEffect(() => {
-    menuApi.getAll()
-      .then(res => setMenuItems(res.data.filter(i => i.is_available)))
-      .catch(() => Alert.alert('Error', 'Failed to load menu.'))
-      .finally(() => setLoading(false));
+    async function loadMenu() {
+      try {
+        const res = await menuApi.getAll();
+        if (!Array.isArray(res.data)) {
+          throw new Error('The server returned an unexpected menu response.');
+        }
+        setMenuItems(res.data.filter(item => item.is_available));
+        try {
+          await cacheData('manager-menu', res.data);
+        } catch (cacheError) {
+          console.error('Could not cache menu for offline use:', cacheError);
+          setMenuError('Menu loaded, but this device could not save an offline copy.');
+        }
+      } catch (error) {
+        try {
+          const cachedMenu = await getCachedData('manager-menu');
+          if (Array.isArray(cachedMenu)) {
+            setMenuItems(cachedMenu.filter(item => item.is_available));
+            setMenuError('Offline: showing the last downloaded menu. Stock and availability may have changed.');
+          } else {
+            setMenuItems([]);
+            setMenuError(error.response?.data?.error || error.message || 'Could not load menu.');
+          }
+        } catch (cacheError) {
+          setMenuItems([]);
+          setMenuError(`Could not load the menu or local cache: ${cacheError.message}`);
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadMenu();
   }, []);
 
   const categories = ['All', ...new Set(menuItems.map(i => i.category))];
@@ -123,17 +157,22 @@ export default function POSScreen() {
     setSubmitting(true);
     setShortage(null);
     try {
-      await ordersApi.create({
+      const result = await recordManagerOperation('order', {
         items: cart.map(c => ({
           recipe_item_id: c.recipe_item_id,
           variation_id: c.variation_id,
           quantity: c.qty,
         })),
         payment_method: paymentMethod,
-      });
+      }, userId);
       setCart([]);
       setCartVisible(false);
-      Alert.alert('✅ Order Placed', 'The order has been submitted successfully!');
+      Alert.alert(
+        result.queued ? 'Order Saved Offline' : '✅ Order Placed',
+        result.queued
+          ? 'The order is saved on this device and will sync when internet returns. Stock will be checked then; review any conflicts in the sync banner.'
+          : 'The order has been submitted successfully!'
+      );
     } catch (err) {
       if (err.response?.data?.shortages) {
         setShortage(err.response.data.shortages);
@@ -174,6 +213,12 @@ export default function POSScreen() {
         </TouchableOpacity>
       </View>
 
+      {!!menuError && menuItems.length > 0 && (
+        <View style={styles.offlineNotice}>
+          <Text style={styles.offlineNoticeText}>{menuError}</Text>
+        </View>
+      )}
+
       {/* Stock shortage alert */}
       {shortage && (
         <View style={styles.shortageBox}>
@@ -213,6 +258,13 @@ export default function POSScreen() {
         contentContainerStyle={styles.grid}
         columnWrapperStyle={{ gap: spacing.md }}
         ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
+        ListEmptyComponent={
+          <View style={styles.emptyMenu}>
+            <Text style={styles.emptyMenuMessage}>
+              {menuError || 'No available menu items.'}
+            </Text>
+          </View>
+        }
         renderItem={({ item }) => (
           <View style={{ flex: 1 }}>
             <MenuCard item={item} onAdd={addToCart} />
@@ -342,6 +394,10 @@ const styles = StyleSheet.create({
   },
   shortageTitle: { fontWeight: '700', color: colors.danger, marginBottom: spacing.xs },
   shortageItem: { fontSize: 12, color: colors.danger, marginTop: 2 },
+  offlineNotice: { backgroundColor: '#fff3cd', paddingHorizontal: spacing.lg, paddingVertical: spacing.sm },
+  offlineNoticeText: { color: '#664d03', fontSize: 12 },
+  emptyMenu: { alignItems: 'center', paddingHorizontal: spacing.xl, paddingVertical: spacing.xxxl * 2 },
+  emptyMenuMessage: { fontSize: 13, color: colors.muted, textAlign: 'center' },
   catScroll: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,

@@ -4,8 +4,10 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { startScheduler } = require('./scheduler/cronJobs');
+const { initializeOfflineSync } = require('./services/offlineSyncService');
 
 const app = express();
+
 app.set('trust proxy', 1);
 
 // ─── Security Headers (helmet) ───────────────────────────────────────────────
@@ -81,10 +83,17 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`\n🚀 Habesha Restaurant API running on port ${PORT}`);
-  console.log(`   Health: http://localhost:${PORT}/api/health\n`);
-  startScheduler();
-});
+initializeOfflineSync()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`\n🚀 Habesha Restaurant API running on port ${PORT}`);
+      console.log(`   Health: http://localhost:${PORT}/api/health\n`);
+      startScheduler();
+    });
+  })
+  .catch((err) => {
+    console.error('❌ Failed to initialize offline sync storage:', err.message);
+    process.exit(1);
+  });
 
 module.exports = app;

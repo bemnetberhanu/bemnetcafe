@@ -1,8 +1,9 @@
 const pool = require('../database/db');
 const { addInventory } = require('../services/inventoryService');
+const { findReceipt, saveReceipt } = require('../services/offlineSyncService');
 
 async function createPurchase(req, res) {
-  const { supplier_name, notes, items } = req.body;
+  const { supplier_name, notes, items, client_operation_id: operationId } = req.body;
 
   if (!items || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'Purchase must contain at least one item.' });
@@ -11,6 +12,17 @@ async function createPurchase(req, res) {
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
+
+    if (operationId) {
+      const receipt = await findReceipt(conn, operationId, req.user.id);
+      if (receipt) {
+        await conn.commit();
+        if (receipt.operation_type !== 'purchase') {
+          return res.status(409).json({ error: 'This operation ID was already used for a different record.' });
+        }
+        return res.status(200).json({ message: 'Purchase was already synced.', purchase_id: receipt.result_id });
+      }
+    }
 
     const totalCost = items.reduce(
       (sum, item) => sum + item.quantity_bought * item.cost_per_unit_at_time,
@@ -33,6 +45,9 @@ async function createPurchase(req, res) {
     // Update inventory — also stops the daily nag for restocked ingredients
     await addInventory(conn, items);
 
+    if (operationId) {
+      await saveReceipt(conn, operationId, 'purchase', purchaseId, req.user.id);
+    }
     await conn.commit();
 
     const [purchaseRows] = await pool.query('SELECT * FROM purchases WHERE id = ?', [purchaseId]);
@@ -42,6 +57,12 @@ async function createPurchase(req, res) {
     });
   } catch (err) {
     await conn.rollback();
+    if (operationId && err.code === 'ER_DUP_ENTRY') {
+      const receipt = await findReceipt(pool, operationId, req.user.id);
+      if (receipt?.operation_type === 'purchase') {
+        return res.status(200).json({ message: 'Purchase was already synced.', purchase_id: receipt.result_id });
+      }
+    }
     console.error('Purchase error:', err);
     res.status(500).json({ error: 'Failed to record purchase.' });
   } finally {

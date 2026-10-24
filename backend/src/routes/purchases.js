@@ -14,6 +14,7 @@ router.post('/',
   body('items.*.ingredient_id').isInt(),
   body('items.*.quantity_bought').isFloat({ min: 0.001 }),
   body('items.*.cost_per_unit_at_time').isFloat({ min: 0 }),
+  body('client_operation_id').optional().isString().isLength({ min: 20, max: 100 }).matches(/^[A-Za-z0-9-]+$/),
   validate,
   ctrl.createPurchase
 );

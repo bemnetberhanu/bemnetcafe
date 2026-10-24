@@ -11,6 +11,7 @@ router.post('/',
   authenticate, requireManager,
   body('category').notEmpty(),
   body('amount').isFloat({ min: 0.01 }),
+  body('client_operation_id').optional().isString().isLength({ min: 20, max: 100 }).matches(/^[A-Za-z0-9-]+$/),
   validate,
   ctrl.create
 );

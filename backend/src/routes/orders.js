@@ -13,6 +13,7 @@ router.post('/',
   body('items').isArray({ min: 1 }).withMessage('At least one order item is required'),
   body('items.*.recipe_item_id').isInt(),
   body('items.*.quantity').isInt({ min: 1 }),
+  body('client_operation_id').optional().isString().isLength({ min: 20, max: 100 }).matches(/^[A-Za-z0-9-]+$/),
   validate,
   ctrl.createOrder
 );

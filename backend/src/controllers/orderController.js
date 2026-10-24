@@ -1,8 +1,9 @@
 const pool = require('../database/db');
 const { checkStock, deductInventory } = require('../services/inventoryService');
+const { findReceipt, saveReceipt } = require('../services/offlineSyncService');
 
 async function createOrder(req, res) {
-  const { items, payment_method = 'cash', notes } = req.body;
+  const { items, payment_method = 'cash', notes, client_operation_id: operationId } = req.body;
 
   if (!items || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'Order must contain at least one item.' });
@@ -11,6 +12,17 @@ async function createOrder(req, res) {
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
+
+    if (operationId) {
+      const receipt = await findReceipt(conn, operationId, req.user.id);
+      if (receipt) {
+        await conn.commit();
+        if (receipt.operation_type !== 'order') {
+          return res.status(409).json({ error: 'This operation ID was already used for a different record.' });
+        }
+        return res.status(200).json({ message: 'Order was already synced.', order_id: receipt.result_id });
+      }
+    }
 
     const stockCheck = await checkStock(conn, items);
     if (!stockCheck.ok) {
@@ -56,6 +68,9 @@ async function createOrder(req, res) {
     }
 
     await deductInventory(conn, items);
+    if (operationId) {
+      await saveReceipt(conn, operationId, 'order', orderId, req.user.id);
+    }
     await conn.commit();
 
     const [orderRows] = await pool.query('SELECT * FROM orders WHERE id = ?', [orderId]);
@@ -65,6 +80,12 @@ async function createOrder(req, res) {
     });
   } catch (err) {
     await conn.rollback();
+    if (operationId && err.code === 'ER_DUP_ENTRY') {
+      const receipt = await findReceipt(pool, operationId, req.user.id);
+      if (receipt?.operation_type === 'order') {
+        return res.status(200).json({ message: 'Order was already synced.', order_id: receipt.result_id });
+      }
+    }
     console.error('Order error:', err);
     res.status(500).json({ error: 'Failed to place order.' });
   } finally {
